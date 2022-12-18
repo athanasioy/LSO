@@ -3,10 +3,10 @@ import configparser
 import time
 from typing import List
 
-from algorithm import BaseAlgo, BetterAlgo
+from algorithm import BaseAlgo, BetterAlgo, BaseAlgo2
 from mapmanager import MapManager
 from node import Node, Vehicle
-from optimizer import SwapMoveOptimizer
+from optimizer import SwapMoveOptimizer, ReLocatorOptimizer, VND, TwoOptOptimizer
 from solution import Solution
 
 
@@ -55,7 +55,7 @@ def main() -> None:
     vehicles = initialize_vehicles(home_depot)
 
     node_map = MapManager(nodes=nodes, vehicles=vehicles)
-    base_algo = BetterAlgo(_map=node_map)
+    base_algo = BaseAlgo2(_map=node_map)
 
     start_time = time.time()
     base_algo.run()
@@ -68,29 +68,39 @@ def main() -> None:
     service_time, slowest_vehicle = solution.compute_service_time()
 
     print(f"Algorithm finished in {end_time - start_time} seconds")
-    print(f"Solution Time {service_time}")
+    print(f"Solution Time {service_time}, total distance {solution.compute_total_distance()}")
     print(f"Slowest Vehicle was {slowest_vehicle} with route {slowest_vehicle.vehicle_route}")
     print(f"Slowest Route total demand {slowest_vehicle.vehicle_route.get_total_route_demand()}")
     print(f"Slowest Route Total Distance {slowest_vehicle.vehicle_route.get_total_distance()}")
+
+    # ui = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=solution.map.vehicles)
+    # ui.plot_routes()
 
     sw = SwapMoveOptimizer(solution)
-    sw.run()
+    # sw.run()
+    #
+    rl = ReLocatorOptimizer(solution)
+    # rl.run()
 
+    twoOpt = TwoOptOptimizer(solution)
+    twoOpt.run()
+    # vnd = VND()
+    # vnd.add_pipeline(twoOpt)
+    # vnd.add_pipeline(rl)
+    # vnd.add_pipeline(sw)
+    # #
+    # vnd.run()
     end_time = time.time()
-    service_time, slowest_vehicle = sw.solution.compute_service_time()
-
+    service_time, slowest_vehicle = solution.compute_service_time()
+    solution.run_checks()
     print(f"Algorithm and Optimizer finished in {end_time - start_time} seconds")
-    print(f"Solution Time {service_time}")
+    print(f"Solution Time {service_time}, total distance {solution.compute_total_distance()}")
     print(f"Slowest Vehicle was {slowest_vehicle} with route {slowest_vehicle.vehicle_route}")
     print(f"Slowest Route total demand {slowest_vehicle.vehicle_route.get_total_route_demand()}")
     print(f"Slowest Route Total Distance {slowest_vehicle.vehicle_route.get_total_distance()}")
 
-    # ui = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=solution.vehicles)
-    # ui.plot_routes()
-    solution.duplicate_nodes()
-    solution.check_multiple_visits()
 
-    ui2 = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=sw.solution.map.vehicles)
+    ui2 = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=solution.map.vehicles)
     ui2.plot_routes()
 
 

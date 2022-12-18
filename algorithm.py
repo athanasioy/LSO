@@ -157,3 +157,54 @@ class BetterAlgo:
     def reset_consider_nodes(self):
         for node in self.map.nodes:
             node.do_not_consider = False
+
+
+class BaseAlgo2:
+
+    def __init__(self, _map: MapManager):
+        self.map = _map
+
+    def run(self):
+        end = False
+        c= 0
+        while not end:
+            self.run_iteration()
+            end = self.check_if_ended()
+            print(f"iteration {c}")
+            c+=1
+    def run_iteration(self):
+
+        for vehicle in self.map.vehicles:
+
+            node = self.find_next_nodes(vehicle)
+            if node:
+                self.map.add_vehicle_route(vehicle, node)
+                self.map.update_vehicle_position(vehicle)
+                self.map.update_node(node)
+
+    def find_next_nodes(self, vehicle:Vehicle) -> Node:
+
+
+        vehicle_pos = vehicle.vehicle_route.get_last_node()
+
+        distances = self.map.distance_matrix.get(vehicle_pos)
+        distances = {node:dist for node,dist in distances.items() if not node.has_been_visited and vehicle.has_enough_capacity(node.demand)}
+
+        if not distances:
+            return None
+
+        nearest_node = min(distances, key=distances.get)
+
+        return nearest_node
+
+
+    def reset_consider_nodes(self):
+        for node in self.map.nodes:
+            node.do_not_consider = False
+
+    def check_if_available_nodes_left(self):
+        return all((node.do_not_consider or node.has_been_visited) for node in self.map.nodes)
+
+    def check_if_ended(self) -> bool:
+        has_been_visited = [node.has_been_visited for node in self.map.nodes]
+        return all(has_been_visited)  # if every node has been visited, return True

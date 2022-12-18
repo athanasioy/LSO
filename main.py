@@ -83,13 +83,13 @@ def main() -> None:
     # rl.run()
 
     twoOpt = TwoOptOptimizer(solution)
-    twoOpt.run()
-    # vnd = VND()
-    # vnd.add_pipeline(twoOpt)
-    # vnd.add_pipeline(rl)
-    # vnd.add_pipeline(sw)
-    # #
-    # vnd.run()
+    # twoOpt.run()
+    vnd = VND()
+    vnd.add_pipeline(sw)
+    vnd.add_pipeline(rl)
+        vnd.add_pipeline(twoOpt)
+    #
+    vnd.run()
     end_time = time.time()
     service_time, slowest_vehicle = solution.compute_service_time()
     solution.run_checks()

@@ -298,7 +298,7 @@ class TwoOptOptimizer(Optimizer):
                                   second_pos=second_pos,
                                   vehicle1=vehicle1,
                                   vehicle2=vehicle2)
-                    self.solution.run_checks()
+                    # self.solution.run_checks()
 
                     self.update_cache(vehicle1,vehicle2)
 
@@ -363,22 +363,22 @@ class TwoOptOptimizer(Optimizer):
         return True
 
     def doTwoOpt(self, first_pos, second_pos, vehicle1:Vehicle, vehicle2:Vehicle):
-        print('twoOpt')
+        # print('twoOpt')
         temp = vehicle1.vehicle_route.node_sequence.copy() # Keep this because swapping elements changes list
-        print(f"first pos:{first_pos}, second pos {second_pos}, vehicle1 {vehicle1}, vehicle2 {vehicle2}")
-        print(vehicle1.vehicle_route, end=',')
-        print(vehicle2.vehicle_route)
+        # print(f"first pos:{first_pos}, second pos {second_pos}, vehicle1 {vehicle1}, vehicle2 {vehicle2}")
+        # print(vehicle1.vehicle_route, end=',')
+        # print(vehicle2.vehicle_route)
 
         vehicle1.vehicle_route.node_sequence = vehicle1.vehicle_route.node_sequence[:first_pos+1] + \
                                                vehicle2.vehicle_route.node_sequence[second_pos:]
 
-        vehicle2.vehicle_route.node_sequence = vehicle2.vehicle_route.node_sequence[:second_pos+1] +\
+        vehicle2.vehicle_route.node_sequence = vehicle2.vehicle_route.node_sequence[:second_pos] +\
                                                temp[first_pos+1:]
 
 
-        print('twoOpt Result')
-        print(vehicle1.vehicle_route, end=',')
-        print(vehicle2.vehicle_route)
+        # print('twoOpt Result')
+        # print(vehicle1.vehicle_route, end=',')
+        # print(vehicle2.vehicle_route)
 
         del temp #
 

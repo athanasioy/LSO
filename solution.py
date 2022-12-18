@@ -64,9 +64,10 @@ class Solution:
         return True
 
     def check_multiple_visits(self):
-        route_sets = [set(vehicle.vehicle_route.node_sequence) for vehicle in self.map.vehicles]
+        route_sets = [set(vehicle.vehicle_route.node_sequence[1:]) for vehicle in self.map.vehicles]
         intersections_between_routes = set.intersection(*route_sets)
         if len(intersections_between_routes) != 0:
+            print(intersections_between_routes)
             raise ValueError("Mutlpile Visits on routes")
         print("ALL GOOD WITH MULTIPLE VISITS")
         return True

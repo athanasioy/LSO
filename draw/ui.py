@@ -2,7 +2,7 @@ from typing import List
 
 import matplotlib.pyplot as plt
 
-from node import Node, Vehicle
+from map_objects.node import Node, Vehicle
 
 
 class UI:

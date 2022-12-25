@@ -1,7 +1,7 @@
 from typing import Protocol, Tuple, List
 
-from mapmanager import MapManager
-from node import Node, Vehicle
+from map_objects.mapmanager import MapManager
+from map_objects.node import Node, Vehicle
 
 
 class Algorithm(Protocol):

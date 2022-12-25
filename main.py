@@ -3,14 +3,15 @@ import configparser
 import time
 from typing import List
 
-from algorithm import BaseAlgo, BetterAlgo, BaseAlgo2
-from mapmanager import MapManager
-from node import Node, Vehicle
-from optimizer import SwapMoveOptimizer, ReLocatorOptimizer, VND, TwoOptOptimizer
-from solution import Solution
+from solver_objects.algorithm import BaseAlgo2, BetterAlgo
+from map_objects.mapmanager import MapManager
+from map_objects.node import Node, Vehicle
+from solver_objects.optimizer import SwapMoveOptimizer, ReLocatorOptimizer, TwoOptOptimizer
+from solver_objects.combiners import VND
+from solver_objects.solution import Solution
 
 
-from ui import UI
+from draw.ui import UI
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -55,7 +56,7 @@ def main() -> None:
     vehicles = initialize_vehicles(home_depot)
 
     node_map = MapManager(nodes=nodes, vehicles=vehicles)
-    base_algo = BaseAlgo2(_map=node_map)
+    base_algo = BetterAlgo(_map=node_map)
 
     start_time = time.time()
     base_algo.run()
@@ -87,7 +88,7 @@ def main() -> None:
     vnd = VND()
     vnd.add_pipeline(sw)
     vnd.add_pipeline(rl)
-        vnd.add_pipeline(twoOpt)
+    vnd.add_pipeline(twoOpt)
     #
     vnd.run()
     end_time = time.time()

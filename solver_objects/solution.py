@@ -1,8 +1,7 @@
 import math
-from typing import List
 
-from mapmanager import MapManager
-from node import Node, Vehicle
+from map_objects.mapmanager import MapManager
+from map_objects.node import Node, Vehicle
 
 
 def compute_node_distance(node1: Node, node2: Node) -> float:

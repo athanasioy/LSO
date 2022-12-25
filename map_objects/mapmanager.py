@@ -1,8 +1,8 @@
 import itertools
 import math
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
-from node import Node, Vehicle
+from map_objects.node import Node, Vehicle
 
 
 
@@ -29,6 +29,7 @@ class MapManager:
         self.nodes[node_index].has_been_visited = True
 
     def update_cumul_costs(self):
+        """Update cached distance and time costs"""
         for vehicle in self.vehicles:
             vehicle.vehicle_route.update_cumul_distance_cost()
             vehicle.update_cumul_time_cost()

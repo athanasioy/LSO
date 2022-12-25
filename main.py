@@ -86,8 +86,8 @@ def main() -> None:
     twoOpt = TwoOptOptimizer(solution)
     # twoOpt.run()
     vnd = VND()
-    vnd.add_pipeline(sw)
-    vnd.add_pipeline(rl)
+    vnd.add_pipeline(rl) # rl -> sw -> twoOpt 241
+    vnd.add_pipeline(sw) # sw -> rl -> TwoOpt 259
     vnd.add_pipeline(twoOpt)
     #
     vnd.run()
@@ -99,6 +99,8 @@ def main() -> None:
     print(f"Slowest Vehicle was {slowest_vehicle} with route {slowest_vehicle.vehicle_route}")
     print(f"Slowest Route total demand {slowest_vehicle.vehicle_route.get_total_route_demand()}")
     print(f"Slowest Route Total Distance {slowest_vehicle.vehicle_route.get_total_distance()}")
+    # for vehicle in solution.map.vehicles:
+    #     print(f"{vehicle},{vehicle.vehicle_route}")
 
 
     ui2 = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=solution.map.vehicles)

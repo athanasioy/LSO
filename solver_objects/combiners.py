@@ -15,6 +15,8 @@ class VND:
             counter = self.algos[index].run()
             if counter == 1:
                 index += 1
+            elif counter > 150:
+                break
             else:
                 index = 0  # Reset the index
 

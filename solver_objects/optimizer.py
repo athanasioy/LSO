@@ -49,17 +49,28 @@ class SwapMoveOptimizer(Optimizer):
     def run(self):
         c = 0
         self.run_again = True
+
+        self.solution.map.update_cumul_costs()
+
         while self.run_again:
             self.run_again = False
             self.generate_solution_space()
 
             if self.beneficial_moves:
-                self.beneficial_moves.sort(key= lambda move: move.distance_cost, reverse=True)
+                self.beneficial_moves.sort(key= lambda move: move.move_cost)
                 best_move = self.beneficial_moves[0]
                 self.apply_move(best_move.first_pos, best_move.second_pos,best_move.vehicle1, best_move.vehicle2)
                 self.beneficial_moves = []  # clear moves
+                self.update_cache(best_move.vehicle1, best_move.vehicle2)  # update cache
+                old_service_time = self.solution.solution_time
+                self.solution.compute_service_time()
+                new_service_time = self.solution.solution_time
+                if new_service_time>old_service_time:
+                    print(Move)
+                    raise ValueError('Something went wrong with move')
+
             c += 1
-            print(f"iteration {c}")
+            print(f"iteration Swap {c}")
 
         return c  # Used in VHS
 
@@ -85,13 +96,15 @@ class SwapMoveOptimizer(Optimizer):
                                           vehicle2=vehicle2):
                     continue
 
-                cost = self.move_cost(first_pos, second_pos, vehicle1, vehicle2)
+                distance_cost = self.move_cost(first_pos, second_pos, vehicle1, vehicle2)
 
-                if cost<0:
-
+                time_cost = self.determine_time_impact(first_pos, second_pos, vehicle1, vehicle2)
+                # time_cost = 0
+                if (distance_cost<0 and time_cost==0) or time_cost<0:
+                    # print('got in')
                     self.add_move(
                         Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
-                             distance_cost=cost, time_cost=0)
+                             distance_cost=distance_cost, time_cost=time_cost)
                     )
                     self.run_again = True
 
@@ -143,6 +156,41 @@ class SwapMoveOptimizer(Optimizer):
     def add_move(self, move:Move):
         self.beneficial_moves.append(move)
 
+    def determine_time_impact(self, first_pos:int , second_pos:int , vehicle1:Vehicle, vehicle2:Vehicle):
+        a, swap_node1, c = vehicle1.vehicle_route.get_adjacent_nodes(first_pos)
+        d, swap_node2, f = vehicle2.vehicle_route.get_adjacent_nodes(second_pos)
+
+        vehicle1_net_effect, vehicle2_net_effect = self.determine_time_costs(a, swap_node1, c, d, swap_node2, f, vehicle1,vehicle2)
+
+        vehicle1_new_time = vehicle1.vehicle_route.cumul_time_cost[-1] + vehicle1_net_effect
+        vehicle2_new_time = vehicle2.vehicle_route.cumul_time_cost[-1] + vehicle2_net_effect
+
+        new_solution_time = max(vehicle1_new_time, vehicle2_new_time)
+
+        if self.solution.slowest_vehicle not in (vehicle1, vehicle2):
+            # if solution doesn't affect slowest vehicle, solution time can only go up
+            return max(new_solution_time - self.solution.solution_time, 0)
+        else:
+            # if solution affects slowest vehicle, return net difference of new solution time minus old solution time
+            return new_solution_time - self.solution.solution_time
+
+
+    def determine_time_costs(self, a, swap_node1, c, d, swap_node2, f,vehicle1:Vehicle, vehicle2:Vehicle):
+
+        vehicle2_net_effect = vehicle2.time_matrix.get(d).get(swap_node1)+ vehicle2.time_matrix.get(swap_node1).get(f)- \
+                            vehicle2.time_matrix.get(d).get(swap_node2) - vehicle2.time_matrix.get(swap_node2).get(f)
+
+        vehicle1_net_effect = vehicle1.time_matrix.get(a).get(swap_node2) + vehicle1.time_matrix.get(swap_node2).get(c)\
+                              - \
+                              vehicle1.time_matrix.get(a).get(swap_node1) - vehicle1.time_matrix.get(swap_node1).get(c)
+
+        return vehicle1_net_effect , vehicle2_net_effect
+
+    def update_cache(self, *args):
+        for vehicle in args:
+            vehicle.update_cumul_time_cost()
+            vehicle.vehicle_route.update_cumul_distance_cost()
+
 
 class ReLocatorOptimizer(Optimizer):
     def __init__(self, solution: Solution):
@@ -157,13 +205,20 @@ class ReLocatorOptimizer(Optimizer):
             self.run_again = False
             self.generate_solution_space()
             if self.beneficial_moves:
-                self.beneficial_moves.sort(key=lambda move: move.distance_cost, reverse=True)
+                self.beneficial_moves.sort(key=lambda move: move.move_cost)
                 best_move = self.beneficial_moves[0]
                 self.apply_move(best_move.first_pos, best_move.second_pos, best_move.vehicle1, best_move.vehicle2)
                 self.beneficial_moves = []  # clear moves
-                self.solution.compute_service_time()  # Update solution time
+                old_service_time = self.solution.solution_time
+                self.solution.compute_service_time()
+                new_service_time = self.solution.solution_time
+                if new_service_time>old_service_time:
+                    print(best_move)
+                    print(f"vehicle1 {best_move.vehicle1.vehicle_route.node_sequence}, vehicle2 {best_move.vehicle2.vehicle_route.node_sequence}")
+                    print(new_service_time, old_service_time)
+                    raise ValueError('Something went wrong with move')
             c += 1
-            print(f"iteration {c}")
+            print(f"iteration reloc {c}")
         return c
 
     def generate_solution_space(self):
@@ -197,13 +252,12 @@ class ReLocatorOptimizer(Optimizer):
                                                          vehicle1=vehicle1,
                                                          vehicle2=vehicle2)
 
-                if cost<0 and time_impact<=0:
+                if (cost<0 and time_impact==0) or (time_impact<0):
                     self.add_move(
                         Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
                              distance_cost=cost ,time_cost=time_impact)
                     )
                     self.run_again = True
-                    self.solution.compute_service_time()
 
     def move_cost(self, first_pos: int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle) -> float:
         a, swap_node1, c = vehicle1.vehicle_route.get_adjacent_nodes(first_pos)
@@ -240,38 +294,30 @@ class ReLocatorOptimizer(Optimizer):
         time_added_vehicle2 , time_removed_vehicle1 = self.determine_time_costs(a,swap_node1,c,d,swap_node2,f,vehicle1,vehicle2)
 
         new_vehicle_time2 = time_added_vehicle2 + vehicle2.get_route_service_time()
-        new_vehicle_time1 = time_removed_vehicle1 + vehicle1.get_route_service_time()
 
         # case when we are changing routes that do not concern slowest vehicle
         if self.solution.slowest_vehicle not in (vehicle1,vehicle2):
             # check if we got any slower from the slowest vehicle
-            if new_vehicle_time2 > self.solution.solution_time:
-                return new_vehicle_time2 - self.solution.solution_time
-            else:
-                # When we didn't get any slower, solution has no time implications
-                return 0.0
-
-        if self.solution.slowest_vehicle == vehicle2:
+            return max(new_vehicle_time2 - self.solution.solution_time,0)
+        else:
             return new_vehicle_time2 - self.solution.solution_time
 
 
     def determine_time_costs(self, a, swap_node1, c, d, swap_node2, f, vehicle1:Vehicle, vehicle2:Vehicle):
 
         time_added_vehicle2 = vehicle2.time_matrix.get(swap_node2).get(swap_node1) + \
-                              vehicle2.time_matrix.get(swap_node2).get(c) - \
-                              vehicle2.time_matrix.get(swap_node1).get(c)
+                              vehicle2.time_matrix.get(swap_node1).get(f) - \
+                              vehicle2.time_matrix.get(swap_node2).get(f)
 
-        time_removed_vehicle1 = vehicle1.time_matrix.get(d).get(swap_node2) + \
-                                vehicle1.time_matrix.get(swap_node2).get(f) - \
-                                vehicle1.time_matrix.get(a).get(f)
+        time_added_vehicle1 = vehicle1.time_matrix.get(a).get(c) - \
+                                vehicle1.time_matrix.get(a).get(swap_node1) - \
+                                vehicle1.time_matrix.get(swap_node1).get(c)
 
-        return time_added_vehicle2, time_removed_vehicle1
+        return time_added_vehicle2, time_added_vehicle1
 
 
     def apply_move(self, first_pos, second_pos, vehicle1, vehicle2):
         """Apply Relocation Move"""
-        print(vehicle1, vehicle1.vehicle_route)
-        print(vehicle2, vehicle2.vehicle_route)
 
         vehicle2.vehicle_route.node_sequence.insert(second_pos+1, vehicle1.vehicle_route.node_sequence[first_pos])
         if vehicle1 == vehicle2 and first_pos > second_pos:
@@ -300,7 +346,7 @@ class TwoOptOptimizer(Optimizer):
             self.run_again = False
             self.generate_solution_space()
             if self.beneficial_moves:
-                self.beneficial_moves.sort(key=lambda move: move.distance_cost, reverse=True)
+                self.beneficial_moves.sort(key=lambda move: move.move_cost)
                 best_move = self.beneficial_moves[0]
 
                 self.apply_move(best_move.first_pos, best_move.second_pos, best_move.vehicle1, best_move.vehicle2)
@@ -309,8 +355,8 @@ class TwoOptOptimizer(Optimizer):
                 self.solution.compute_service_time()  # Update solution time
                 self.update_cache(best_move.vehicle1, best_move.vehicle2)  # update cache
 
-        c += 1
-        print(f"iteration {c}")
+            c += 1
+            print(f"iteration twoOpt {c}")
 
         return c
 
@@ -340,7 +386,7 @@ class TwoOptOptimizer(Optimizer):
                                                          vehicle1=vehicle1,
                                                          vehicle2=vehicle2)
 
-                if cost<0 and time_impact<=0:
+                if (cost<0 and time_impact==0) or time_impact<0:
                     self.add_move(
                         Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
                              distance_cost=cost,time_cost=time_impact)

@@ -13,7 +13,7 @@ class Solution:
     def __init__(self, Map: MapManager):
         self.map = Map
         self.solution_time: float
-        self.solution_time, self.slowest_vehicle = self.compute_service_time()
+        self.solution_time,self.slowest_vehicle = self.compute_service_time() # update self.solution_time and slowest_vehicle
 
     def compute_service_time(self):
         max_time = 0
@@ -25,6 +25,7 @@ class Solution:
                 slowest_vehicle = vehicle
 
         self.slowest_vehicle = slowest_vehicle
+        self.solution_time = max_time
         return max_time, slowest_vehicle
 
     def compute_route_time(self, vehicle: Vehicle):
@@ -75,3 +76,9 @@ class Solution:
         self.duplicate_nodes()
         self.check_multiple_visits()
         self.check_capacity()
+        self.all_routes_start_from_depot()
+
+    def all_routes_start_from_depot(self):
+        for vehicle in self.map.vehicles:
+            if vehicle.vehicle_route.node_sequence[0].id != 0:
+                raise ValueError(f'vehicle {vehicle} does not start from depot! {vehicle.vehicle_route}')

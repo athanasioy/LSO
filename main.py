@@ -7,7 +7,7 @@ from solver_objects.algorithm import BaseAlgo2, BetterAlgo
 from map_objects.mapmanager import MapManager
 from map_objects.node import Node, Vehicle
 from solver_objects.optimizer import SwapMoveOptimizer, ReLocatorOptimizer, TwoOptOptimizer
-from solver_objects.combiners import VND
+from solver_objects.combiners import VND, TabuReloc
 from solver_objects.solution import Solution
 
 
@@ -91,6 +91,9 @@ def main() -> None:
     vnd.add_pipeline(twoOpt)
     #
     vnd.run()
+
+    # tabu = TabuReloc(solution, 10000, 25)
+    # tabu.run()
     end_time = time.time()
     service_time, slowest_vehicle = solution.compute_service_time()
     solution.run_checks()

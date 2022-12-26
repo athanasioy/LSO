@@ -13,6 +13,7 @@ class Node:
         self.unloading_time = unloading_time
         self.has_been_visited = False
         self.do_not_consider = False
+        self.tabu_iterator = 0
 
     def __repr__(self):
         return f"id: {self.id}"

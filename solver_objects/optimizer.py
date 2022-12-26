@@ -1,44 +1,11 @@
 import itertools
-from abc import ABC, abstractmethod
 from typing import Tuple, List
 
 from map_objects.node import Vehicle
+from solver_objects.OptimizerABC import Optimizer
 from solver_objects.OptimizerMove import Move
 from solver_objects.solution import Solution
 
-
-class Optimizer(ABC):
-    def generate_solution_space(self):
-        """Generate all possible moves"""
-        pass
-    @abstractmethod
-    def move_cost(self, first_pos: int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle) -> float:
-        """Return True if move gives lower cost"""
-        pass
-    @staticmethod
-    @abstractmethod
-    def capacity_check(first_pos: int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle) -> bool:
-        """Check capacity"""
-
-    @abstractmethod
-    def determine_distance_costs(self, a, swap_node1, c, d, swap_node2, f) -> Tuple[float, float]:
-        """Determine the Cost of Move"""
-        pass
-
-    @abstractmethod
-    def apply_move(self,first_pos:int, second_pos:int, vehicle1:Vehicle, vehicle2:Vehicle):
-        """Apply Move"""
-        pass
-    @staticmethod
-    def feasible_combination(first_pos: int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle) -> bool:
-        """Check if all indices are inside the bounds of the route list"""
-        # print("**"*40)
-        smallest_route = min(len(vehicle1.vehicle_route.node_sequence), len(vehicle2.vehicle_route.node_sequence))
-        # print(f"smallest_route is {smallest_route}")
-        # print(f"max is {max(first_pos, second_pos)}")
-        if max(first_pos, second_pos) > smallest_route - 1:
-            return False
-        return True
 
 class SwapMoveOptimizer(Optimizer):
     def __init__(self, solution: Solution):
@@ -52,22 +19,11 @@ class SwapMoveOptimizer(Optimizer):
 
         self.solution.map.update_cumul_costs()
 
-        while self.run_again:
+        while self.iterator_controller():
             self.run_again = False
             self.generate_solution_space()
-
-            if self.beneficial_moves:
-                self.beneficial_moves.sort(key= lambda move: move.move_cost)
-                best_move = self.beneficial_moves[0]
-                self.apply_move(best_move.first_pos, best_move.second_pos,best_move.vehicle1, best_move.vehicle2)
-                self.beneficial_moves = []  # clear moves
-                self.update_cache(best_move.vehicle1, best_move.vehicle2)  # update cache
-                old_service_time = self.solution.solution_time
-                self.solution.compute_service_time()
-                new_service_time = self.solution.solution_time
-                if new_service_time>old_service_time:
-                    print(Move)
-                    raise ValueError('Something went wrong with move')
+            if self.beneficial_moves:  # if Optimizer finds any beneficial moves
+                self.apply_best_move()
 
             c += 1
             print(f"iteration Swap {c}")
@@ -100,13 +56,10 @@ class SwapMoveOptimizer(Optimizer):
 
                 time_cost = self.determine_time_impact(first_pos, second_pos, vehicle1, vehicle2)
                 # time_cost = 0
-                if (distance_cost<0 and time_cost==0) or time_cost<0:
-                    # print('got in')
-                    self.add_move(
-                        Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
-                             distance_cost=distance_cost, time_cost=time_cost)
-                    )
-                    self.run_again = True
+
+                self.handle_move(
+                    Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
+                             distance_cost=distance_cost, time_cost=time_cost))
 
     def apply_move(self,first_pos:int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle):
         """Apply Swap Move"""
@@ -153,8 +106,6 @@ class SwapMoveOptimizer(Optimizer):
 
         return vehicle1.has_enough_capacity(net_demand) and vehicle2.has_enough_capacity(-net_demand)
 
-    def add_move(self, move:Move):
-        self.beneficial_moves.append(move)
 
     def determine_time_impact(self, first_pos:int , second_pos:int , vehicle1:Vehicle, vehicle2:Vehicle):
         a, swap_node1, c = vehicle1.vehicle_route.get_adjacent_nodes(first_pos)
@@ -186,12 +137,6 @@ class SwapMoveOptimizer(Optimizer):
 
         return vehicle1_net_effect , vehicle2_net_effect
 
-    def update_cache(self, *args):
-        for vehicle in args:
-            vehicle.update_cumul_time_cost()
-            vehicle.vehicle_route.update_cumul_distance_cost()
-
-
 class ReLocatorOptimizer(Optimizer):
     def __init__(self, solution: Solution):
         self.solution = solution
@@ -199,27 +144,16 @@ class ReLocatorOptimizer(Optimizer):
         self.beneficial_moves: List[Move] = []
 
     def run(self):
-        c = 0
+        self.c = 0
         self.run_again = True
-        while self.run_again:
+        while self.iterator_controller():
             self.run_again = False
             self.generate_solution_space()
             if self.beneficial_moves:
-                self.beneficial_moves.sort(key=lambda move: move.move_cost)
-                best_move = self.beneficial_moves[0]
-                self.apply_move(best_move.first_pos, best_move.second_pos, best_move.vehicle1, best_move.vehicle2)
-                self.beneficial_moves = []  # clear moves
-                old_service_time = self.solution.solution_time
-                self.solution.compute_service_time()
-                new_service_time = self.solution.solution_time
-                if new_service_time>old_service_time:
-                    print(best_move)
-                    print(f"vehicle1 {best_move.vehicle1.vehicle_route.node_sequence}, vehicle2 {best_move.vehicle2.vehicle_route.node_sequence}")
-                    print(new_service_time, old_service_time)
-                    raise ValueError('Something went wrong with move')
-            c += 1
-            print(f"iteration reloc {c}")
-        return c
+                self.apply_best_move()
+            self.c += 1
+            print(f"iteration reloc {self.c}")
+        return self.c
 
     def generate_solution_space(self):
         max_route_length = max(len(vehicle.vehicle_route.node_sequence) for vehicle in self.solution.map.vehicles)
@@ -252,12 +186,10 @@ class ReLocatorOptimizer(Optimizer):
                                                          vehicle1=vehicle1,
                                                          vehicle2=vehicle2)
 
-                if (cost<0 and time_impact==0) or (time_impact<0):
-                    self.add_move(
-                        Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
-                             distance_cost=cost ,time_cost=time_impact)
-                    )
-                    self.run_again = True
+                self.handle_move(
+                    Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2, distance_cost=cost, time_cost=time_impact)
+                )
+
 
     def move_cost(self, first_pos: int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle) -> float:
         a, swap_node1, c = vehicle1.vehicle_route.get_adjacent_nodes(first_pos)
@@ -326,10 +258,6 @@ class ReLocatorOptimizer(Optimizer):
         else:
             del vehicle1.vehicle_route.node_sequence[first_pos]
 
-    def add_move(self, move:Move):
-        self.beneficial_moves.append(move)
-
-
 
 class TwoOptOptimizer(Optimizer):
     def __init__(self, solution: Solution):
@@ -342,18 +270,11 @@ class TwoOptOptimizer(Optimizer):
         self.run_again = True
         self.solution.map.update_cumul_costs()
 
-        while self.run_again:
+        while self.iterator_controller():
             self.run_again = False
             self.generate_solution_space()
             if self.beneficial_moves:
-                self.beneficial_moves.sort(key=lambda move: move.move_cost)
-                best_move = self.beneficial_moves[0]
-
-                self.apply_move(best_move.first_pos, best_move.second_pos, best_move.vehicle1, best_move.vehicle2)
-
-                self.beneficial_moves = []  # clear moves
-                self.solution.compute_service_time()  # Update solution time
-                self.update_cache(best_move.vehicle1, best_move.vehicle2)  # update cache
+                self.apply_best_move()
 
             c += 1
             print(f"iteration twoOpt {c}")
@@ -385,13 +306,10 @@ class TwoOptOptimizer(Optimizer):
                                                          second_pos=second_pos,
                                                          vehicle1=vehicle1,
                                                          vehicle2=vehicle2)
-
-                if (cost<0 and time_impact==0) or time_impact<0:
-                    self.add_move(
-                        Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
+                self.handle_move(
+                    Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
                              distance_cost=cost,time_cost=time_impact)
-                    )
-                    self.run_again = True
+                )
 
     def capacity_check(self, first_pos: int, second_pos:int, vehicle1: Vehicle, vehicle2: Vehicle):
 
@@ -464,14 +382,7 @@ class TwoOptOptimizer(Optimizer):
         # print(vehicle1.vehicle_route, end=',')
         # print(vehicle2.vehicle_route)
 
-        del temp #
+        del temp  # Clean up
 
-    def update_cache(self, *args):
-        for vehicle in args:
-            vehicle.update_cumul_time_cost()
-            vehicle.vehicle_route.update_cumul_distance_cost()
-
-    def add_move(self, move:Move):
-        self.beneficial_moves.append(move)
 
 

@@ -1,5 +1,5 @@
 import math
-
+from typing import Tuple
 from map_objects.mapmanager import MapManager
 from map_objects.node import Node, Vehicle
 
@@ -15,7 +15,7 @@ class Solution:
         self.solution_time: float
         self.solution_time,self.slowest_vehicle = self.compute_service_time() # update self.solution_time and slowest_vehicle
 
-    def compute_service_time(self):
+    def compute_service_time(self) -> Tuple[float, Vehicle]:
         max_time = 0
         slowest_vehicle = None
         for vehicle in self.map.vehicles:

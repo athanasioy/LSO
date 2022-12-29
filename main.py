@@ -86,8 +86,8 @@ def main() -> None:
     twoOpt = TwoOptOptimizer(solution)
     # twoOpt.run()
     vnd = VND()
-    vnd.add_pipeline(rl) # rl -> sw -> twoOpt 241
     vnd.add_pipeline(sw) # sw -> rl -> TwoOpt 259
+    vnd.add_pipeline(rl) # rl -> sw -> twoOpt 241 sw -> rl -> twoOpt 237
     vnd.add_pipeline(twoOpt)
     #
     vnd.run()

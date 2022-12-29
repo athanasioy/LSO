@@ -12,12 +12,11 @@ class SwapMoveOptimizer(Optimizer):
         self.solution = solution
         self.run_again = True
         self.beneficial_moves: List[Move] = []
+        self.solution.map.update_cumul_costs()
 
     def run(self):
         c = 0
         self.run_again = True
-
-        self.solution.map.update_cumul_costs()
 
         while self.iterator_controller():
             self.run_again = False
@@ -106,7 +105,6 @@ class SwapMoveOptimizer(Optimizer):
 
         return vehicle1.has_enough_capacity(net_demand) and vehicle2.has_enough_capacity(-net_demand)
 
-
     def determine_time_impact(self, first_pos:int , second_pos:int , vehicle1:Vehicle, vehicle2:Vehicle):
         a, swap_node1, c = vehicle1.vehicle_route.get_adjacent_nodes(first_pos)
         d, swap_node2, f = vehicle2.vehicle_route.get_adjacent_nodes(second_pos)
@@ -125,7 +123,6 @@ class SwapMoveOptimizer(Optimizer):
             # if solution affects slowest vehicle, return net difference of new solution time minus old solution time
             return new_solution_time - self.solution.solution_time
 
-
     def determine_time_costs(self, a, swap_node1, c, d, swap_node2, f,vehicle1:Vehicle, vehicle2:Vehicle):
 
         vehicle2_net_effect = vehicle2.time_matrix.get(d).get(swap_node1)+ vehicle2.time_matrix.get(swap_node1).get(f)- \
@@ -136,6 +133,7 @@ class SwapMoveOptimizer(Optimizer):
                               vehicle1.time_matrix.get(a).get(swap_node1) - vehicle1.time_matrix.get(swap_node1).get(c)
 
         return vehicle1_net_effect , vehicle2_net_effect
+
 
 class ReLocatorOptimizer(Optimizer):
     def __init__(self, solution: Solution):

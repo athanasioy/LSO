@@ -2,11 +2,12 @@ from solver_objects.OptimizerMove import Move
 from solver_objects.optimizer import ReLocatorOptimizer
 from solver_objects.OptimizerABC import Optimizer
 from solver_objects.solution import Solution
+from typing import List
 
 
 class VND:
     def __init__(self):
-        self.algos = []
+        self.algos: List[Optimizer] = []
 
     def add_pipeline(self, algo: Optimizer):
         self.algos.append(algo)
@@ -15,11 +16,12 @@ class VND:
         index = 0
         while index < len(self.algos):
             print(index)
-            counter = self.algos[index].run()
-            if counter == 1:
-                index += 1
+            self.algos[index].generate_solution_space()
+            if self.algos[index].beneficial_moves:
+                self.algos[index].apply_best_move()
+                index = 0
             else:
-                index = 0  # Reset the index
+                index += 1
 
 
 class TabuReloc(ReLocatorOptimizer):

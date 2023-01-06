@@ -2,12 +2,12 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 from map_objects.node import Vehicle
-from solver_objects.OptimizerMove import Move
+from solver_objects.move import OptimizerMove
 from solver_objects.solution import Solution
 
 
 class Optimizer(ABC):
-    beneficial_moves: List[Move]
+    beneficial_moves: List[OptimizerMove]
     solution: Solution
     run_again: bool
 
@@ -44,12 +44,12 @@ class Optimizer(ABC):
             return False
         return True
 
-    def handle_move(self, move:Move):
+    def handle_move(self, move:OptimizerMove):
         if (move.distance_cost < 0 and move.time_cost == 0) or (move.time_cost < 0):
             self.add_move(move)
             self.run_again = True
 
-    def add_move(self, move:Move):
+    def add_move(self, move:OptimizerMove):
         self.beneficial_moves.append(move)
 
     def apply_best_move(self):

@@ -20,6 +20,11 @@ class Solution:
         slowest_vehicle = None
         for vehicle in self.map.vehicles:
             time = self.compute_route_time(vehicle)
+
+            if slowest_vehicle is None:
+                slowest_vehicle = vehicle
+                max_time = time
+
             if time > max_time:
                 max_time = time
                 slowest_vehicle = vehicle
@@ -68,6 +73,7 @@ class Solution:
         intersections_between_routes = set.intersection(*route_sets)
         if len(intersections_between_routes) != 0:
             print(intersections_between_routes)
+            print(route_sets)
             raise ValueError("Mutlpile Visits on routes")
         print("ALL GOOD WITH MULTIPLE VISITS")
         return True

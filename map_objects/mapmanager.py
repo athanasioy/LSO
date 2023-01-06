@@ -5,28 +5,27 @@ from typing import List, Dict
 from map_objects.node import Node, Vehicle
 
 
-
 class MapManager:
     def __init__(self, nodes: List[Node], vehicles: List[Vehicle]):
         self.nodes = nodes
         self.vehicles = vehicles
-
+        self.depot = vehicles[0].vehicle_route.node_sequence[0]  # save depot on mapManager
         self.distance_matrix: Dict[Node, Dict[Node, float]] = {}
         self.compute_distance_matrix()
         for vehicle in self.vehicles:
             vehicle.compute_time_matrix(distance_matrix=self.distance_matrix)
 
     def add_vehicle_route(self, vehicle: Vehicle, node: Node):
-        vehicle_index = self.vehicles.index(vehicle)
-        self.vehicles[vehicle_index].vehicle_route.update_route(node)
+        vehicle.vehicle_route.update_route(node)
+
+    def insert_vehicle_route(self, vehicle: Vehicle, node: Node, idx: int):
+        vehicle.vehicle_route.node_sequence.insert(idx, node)
 
     def update_vehicle_position(self, vehicle):
-        vehicle_index = self.vehicles.index(vehicle)
-        self.vehicles[vehicle_index].update_position()
+        vehicle.update_position()
 
     def update_node(self, node: Node):
-        node_index = self.nodes.index(node)
-        self.nodes[node_index].has_been_visited = True
+        node.has_been_visited = True
 
     def update_cumul_costs(self):
         """Update cached distance and time costs"""

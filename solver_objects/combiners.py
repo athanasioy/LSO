@@ -1,4 +1,4 @@
-from solver_objects.OptimizerMove import Move
+from solver_objects.move import OptimizerMove
 from solver_objects.optimizer import ReLocatorOptimizer
 from solver_objects.OptimizerABC import Optimizer
 from solver_objects.solution import Solution
@@ -35,12 +35,12 @@ class TabuReloc(ReLocatorOptimizer):
         return self.c <= self.iterator_limit
 
     def handle_move(self, first_pos, second_pos, vehicle1, vehicle2, cost, time_impact):
-        if not self.isTabu(Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
-                 distance_cost=cost, time_cost=time_impact)
-        ):
+        if not self.isTabu(OptimizerMove(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
+                                         distance_cost=cost, time_cost=time_impact)
+                           ):
             self.add_move(
-                Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
-                     distance_cost=cost, time_cost=time_impact)
+                OptimizerMove(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
+                              distance_cost=cost, time_cost=time_impact)
             )
 
     def run(self):
@@ -67,11 +67,11 @@ class TabuReloc(ReLocatorOptimizer):
         best_move.vehicle1.vehicle_route.node_sequence[best_move.first_pos].tabu_iterator += self.tabu_expander
         best_move.vehicle2.vehicle_route.node_sequence[best_move.second_pos].tabu_iterator += self.tabu_expander
 
-    def isTabu(self, move: Move) -> bool:
+    def isTabu(self, move: OptimizerMove) -> bool:
 
         return move in self.tabu_memory
 
-    def add_move_to_memory(self, best_move:Move):
+    def add_move_to_memory(self, best_move:OptimizerMove):
         self.tabu_memory.add(best_move)
 
 

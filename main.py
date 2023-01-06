@@ -3,7 +3,7 @@ import configparser
 import time
 from typing import List
 
-from solver_objects.algorithm import BaseAlgo2, BetterAlgo
+from solver_objects.algorithm import BaseAlgo2, BetterAlgo, MinimumInsertions
 from map_objects.mapmanager import MapManager
 from map_objects.node import Node, Vehicle
 from solver_objects.optimizer import SwapMoveOptimizer, ReLocatorOptimizer, TwoOptOptimizer
@@ -56,15 +56,16 @@ def main() -> None:
     vehicles = initialize_vehicles(home_depot)
 
     node_map = MapManager(nodes=nodes, vehicles=vehicles)
-    base_algo = BetterAlgo(_map=node_map)
-
+    # base_algo = BaseAlgo2(_map=node_map)
+    minins = MinimumInsertions(_map= node_map)
     start_time = time.time()
-    base_algo.run()
+    minins.run()
     end_time = time.time()
     for vehicle in node_map.vehicles:
         print(vehicle, vehicle.vehicle_route.get_total_route_demand())
 
     solution = Solution(node_map)
+    solution.run_checks()
 
     service_time, slowest_vehicle = solution.compute_service_time()
 
@@ -74,17 +75,11 @@ def main() -> None:
     print(f"Slowest Route total demand {slowest_vehicle.vehicle_route.get_total_route_demand()}")
     print(f"Slowest Route Total Distance {slowest_vehicle.vehicle_route.get_total_distance()}")
 
-    # ui = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=solution.map.vehicles)
-    # ui.plot_routes()
 
     sw = SwapMoveOptimizer(solution)
-    # sw.run()
-    #
     rl = ReLocatorOptimizer(solution)
-    # rl.run()
 
     twoOpt = TwoOptOptimizer(solution)
-    # twoOpt.run()
     vnd = VND()
     vnd.add_pipeline(sw) # sw -> rl -> TwoOpt 259
     vnd.add_pipeline(rl) # rl -> sw -> twoOpt 241 sw -> rl -> twoOpt 237
@@ -92,8 +87,6 @@ def main() -> None:
     #
     vnd.run()
 
-    # tabu = TabuReloc(solution, 10000, 25)
-    # tabu.run()
     end_time = time.time()
     service_time, slowest_vehicle = solution.compute_service_time()
     solution.run_checks()

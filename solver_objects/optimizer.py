@@ -3,7 +3,7 @@ from typing import Tuple, List
 
 from map_objects.node import Vehicle
 from solver_objects.OptimizerABC import Optimizer
-from solver_objects.OptimizerMove import Move
+from solver_objects.move import OptimizerMove
 from solver_objects.solution import Solution
 
 
@@ -11,7 +11,7 @@ class SwapMoveOptimizer(Optimizer):
     def __init__(self, solution: Solution):
         self.solution = solution
         self.run_again = True
-        self.beneficial_moves: List[Move] = []
+        self.beneficial_moves: List[OptimizerMove] = []
         self.solution.map.update_cumul_costs()
 
     def run(self):
@@ -57,8 +57,8 @@ class SwapMoveOptimizer(Optimizer):
                 # time_cost = 0
 
                 self.handle_move(
-                    Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
-                             distance_cost=distance_cost, time_cost=time_cost))
+                    OptimizerMove(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
+                                  distance_cost=distance_cost, time_cost=time_cost))
 
     def apply_move(self,first_pos:int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle):
         """Apply Swap Move"""
@@ -139,7 +139,7 @@ class ReLocatorOptimizer(Optimizer):
     def __init__(self, solution: Solution):
         self.solution = solution
         self.run_again = True
-        self.beneficial_moves: List[Move] = []
+        self.beneficial_moves: List[OptimizerMove] = []
 
     def run(self):
         self.c = 0
@@ -185,7 +185,7 @@ class ReLocatorOptimizer(Optimizer):
                                                          vehicle2=vehicle2)
 
                 self.handle_move(
-                    Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2, distance_cost=cost, time_cost=time_impact)
+                    OptimizerMove(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2, distance_cost=cost, time_cost=time_impact)
                 )
 
 
@@ -261,7 +261,7 @@ class TwoOptOptimizer(Optimizer):
     def __init__(self, solution: Solution):
         self.solution = solution
         self.run_again = True
-        self.beneficial_moves: List[Move] = []
+        self.beneficial_moves: List[OptimizerMove] = []
 
     def run(self):
         c = 0
@@ -305,8 +305,8 @@ class TwoOptOptimizer(Optimizer):
                                                          vehicle1=vehicle1,
                                                          vehicle2=vehicle2)
                 self.handle_move(
-                    Move(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
-                             distance_cost=cost,time_cost=time_impact)
+                    OptimizerMove(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
+                                  distance_cost=cost, time_cost=time_impact)
                 )
 
     def capacity_check(self, first_pos: int, second_pos:int, vehicle1: Vehicle, vehicle2: Vehicle):

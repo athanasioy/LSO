@@ -43,14 +43,13 @@ class Route:
         return self.node_sequence[index]
 
     def _get_previous_node_from_position(self, index: int) -> Node:
+        if index == 0:  # if start of node_sequence, return start of node
+            return self.node_sequence[index]
         return self.node_sequence[index - 1]
 
     def _get_next_node_from_position(self, index: int) -> Node:
-        # print(f"index is {index}")
-        # print(f"index +1 is {index+1}")
-        # print(f"len of route is {len(self.node_sequence)}")
-        # print(index, len(self.node_sequence))
-        if index >= (len(self.node_sequence)-1):
+        """If index is on last node, return index instead of index+1"""
+        if index == (len(self.node_sequence)-1):
             return self.node_sequence[index]
         return self.node_sequence[index + 1]
 

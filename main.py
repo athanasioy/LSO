@@ -48,9 +48,9 @@ def initialize_vehicles(home_depot: Node) -> List[Vehicle]:
     return vehicles
 
 
-def main() -> None:
-    random.seed(5)
-    home_depot = Node(_id=0, x_cord=50, y_cord=50, demand=0, unloading_time=0)
+def main(random_seed: int) -> None:
+    random.seed(random_seed)
+    home_depot = Node(_id=0, x_cord=50, y_cord=50, demand=0, unloading_time=15)
     home_depot.has_been_visited = True
     nodes = initialize_nodes(home_depot)
     vehicles = initialize_vehicles(home_depot)
@@ -67,13 +67,13 @@ def main() -> None:
     solution = Solution(node_map)
     solution.run_checks()
 
-    service_time, slowest_vehicle = solution.compute_service_time()
+    solution.compute_service_time()
 
     print(f"Algorithm finished in {end_time - start_time} seconds")
-    print(f"Solution Time {service_time}, total distance {solution.compute_total_distance()}")
-    print(f"Slowest Vehicle was {slowest_vehicle} with route {slowest_vehicle.vehicle_route}")
-    print(f"Slowest Route total demand {slowest_vehicle.vehicle_route.get_total_route_demand()}")
-    print(f"Slowest Route Total Distance {slowest_vehicle.vehicle_route.get_total_distance()}")
+    print(f"Solution Time {solution.solution_time}, total distance {solution.compute_total_distance()}")
+    print(f"Slowest Vehicle was {solution.slowest_vehicle} with route {solution.slowest_vehicle.vehicle_route}")
+    print(f"Slowest Route total demand {solution.slowest_vehicle.vehicle_route.get_total_route_demand()}")
+    print(f"Slowest Route Total Distance {solution.slowest_vehicle.vehicle_route.get_total_distance()}")
 
 
     sw = SwapMoveOptimizer(solution)
@@ -88,20 +88,19 @@ def main() -> None:
     vnd.run()
 
     end_time = time.time()
-    service_time, slowest_vehicle = solution.compute_service_time()
     solution.run_checks()
     print(f"Algorithm and Optimizer finished in {end_time - start_time} seconds")
-    print(f"Solution Time {service_time}, total distance {solution.compute_total_distance()}")
-    print(f"Slowest Vehicle was {slowest_vehicle} with route {slowest_vehicle.vehicle_route}")
-    print(f"Slowest Route total demand {slowest_vehicle.vehicle_route.get_total_route_demand()}")
-    print(f"Slowest Route Total Distance {slowest_vehicle.vehicle_route.get_total_distance()}")
+    print(f"Solution Time {solution.solution_time}, total distance {solution.compute_total_distance()}")
+    print(f"Slowest Vehicle was {solution.slowest_vehicle} with route {solution.slowest_vehicle.vehicle_route}")
+    print(f"Slowest Route total demand {solution.slowest_vehicle.vehicle_route.get_total_route_demand()}")
+    print(f"Slowest Route Total Distance {solution.slowest_vehicle.vehicle_route.get_total_distance()}")
     # for vehicle in solution.map.vehicles:
-    #     print(f"{vehicle},{vehicle.vehicle_route}")
+    #     print(f"{vehicle},{vehicle.get_route_service_time()}")
 
-
-    ui2 = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=solution.map.vehicles)
-    ui2.plot_routes()
+    ui2 = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=node_map.vehicles)
+    # ui2.plot_routes()
 
 
 if __name__ == "__main__":
-    main()
+    random_seed = config.getint('OPTIONS', 'RANDOM_SEED')
+    main(random_seed)

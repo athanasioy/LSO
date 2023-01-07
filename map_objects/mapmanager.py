@@ -15,16 +15,20 @@ class MapManager:
         for vehicle in self.vehicles:
             vehicle.compute_time_matrix(distance_matrix=self.distance_matrix)
 
-    def add_vehicle_route(self, vehicle: Vehicle, node: Node):
+    @staticmethod
+    def add_vehicle_route(vehicle: Vehicle, node: Node):
         vehicle.vehicle_route.update_route(node)
 
-    def insert_vehicle_route(self, vehicle: Vehicle, node: Node, idx: int):
+    @staticmethod
+    def insert_vehicle_route(vehicle: Vehicle, node: Node, idx: int):
         vehicle.vehicle_route.node_sequence.insert(idx, node)
 
-    def update_vehicle_position(self, vehicle):
+    @staticmethod
+    def update_vehicle_position(vehicle):
         vehicle.update_position()
 
-    def update_node(self, node: Node):
+    @staticmethod
+    def update_node(node: Node):
         node.has_been_visited = True
 
     def update_cumul_costs(self):
@@ -42,9 +46,8 @@ class MapManager:
         for node1, node2 in itertools.product(self.nodes, repeat=2):
             dist = self.compute_node_distance(node1, node2)
 
-            if not self.distance_matrix.get(node1): # is None:
+            if not self.distance_matrix.get(node1):  # is None:
                 self.distance_matrix[node1] = {}
 
             self.distance_matrix.get(node1).update({node2:dist})
 
-    #

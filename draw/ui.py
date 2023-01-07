@@ -21,6 +21,7 @@ class UI:
         for node in self.customer_nodes:
             ax.scatter(node.x_cord, node.y_cord, c='black', s=15)
             ax.text(node.x_cord, node.y_cord, s=node.demand)
+            ax.text(node.x_cord+2, node.y_cord+2, s=node.id)
 
         cmap = plt.colormaps['nipy_spectral']
 

@@ -6,9 +6,6 @@ from solver_objects.move import MinimumInsertionMove
 from solver_objects.solution import Solution
 
 
-
-
-
 class BetterAlgo:
 
     def __init__(self, _map: MapManager):
@@ -154,8 +151,6 @@ class MinimumInsertions:
     def run(self):
 
         while self.insertions < len(self.map.nodes)-1:
-            if self.insertions == 199:
-                print(1)
             self.run_iteration()
             print(self.insertions)
 
@@ -167,7 +162,7 @@ class MinimumInsertions:
             self.insertions += 1
 
     def find_next_best_move(self) -> MinimumInsertionMove:
-        min_cost = 10**18
+        min_cost = 10**9
         best_move = None
         for node in self.map.nodes:
             if node.do_not_consider or node.has_been_visited:
@@ -179,8 +174,9 @@ class MinimumInsertions:
 
                 for j in range(len(vehicle.vehicle_route.node_sequence)):
                     _, target_node, c = vehicle.vehicle_route.get_adjacent_nodes(j)
-
-                    distance_added, distance_removed = self.determine_distance_costs(target_node, c, node)
+                    if node.id == 184:
+                        print(1)
+                    distance_added, distance_removed = self.determine_distance_costs(target_node, c, node, vehicle)
                     distance_cost = distance_added - distance_removed
                     time_cost = self.determine_time_cost(target_node,c, node, vehicle)
 
@@ -198,32 +194,40 @@ class MinimumInsertions:
 
         return best_move
 
-    def determine_distance_costs(self, target_node: Node, c: Node, node_to_add: Node):
+    def determine_distance_costs(self, target_node: Node, c: Node, node_to_add: Node, vehicle: Vehicle):
 
         distance_removed = self.map.distance_matrix.get(target_node).get(c)
-
-        distance_added = self.map.distance_matrix.get(target_node).get(node_to_add)
-        distance_added += self.map.distance_matrix.get(node_to_add).get(c)
+        if target_node == vehicle.vehicle_route.node_sequence[-1]:  # if last node in sequence
+            distance_added = self.map.distance_matrix.get(target_node).get(node_to_add)
+        else:
+            distance_added = self.map.distance_matrix.get(target_node).get(node_to_add)
+            distance_added += self.map.distance_matrix.get(node_to_add).get(c)
 
         return distance_added, distance_removed
 
     def determine_time_cost(self, target_node, c, node_to_add, vehicle):
         time_removed = self.map.distance_matrix.get(target_node).get(c)
 
-        time_added = vehicle.time_matrix.get(target_node).get(node_to_add)
-        time_added += vehicle.time_matrix.get(node_to_add).get(c)
+        if target_node == vehicle.vehicle_route.node_sequence[-1]:  # if last node in sequence
+            time_added = vehicle.time_matrix.get(target_node).get(node_to_add)
+        else:
+            time_added = vehicle.time_matrix.get(target_node).get(node_to_add)
+            time_added += vehicle.time_matrix.get(node_to_add).get(c)
 
-        new_solution_time = vehicle.vehicle_route.cumul_time_cost[-1] + time_added + time_removed
+        new_solution_time = vehicle.vehicle_route.cumul_time_cost[-1] + time_added - time_removed
 
         if vehicle == self.solution.slowest_vehicle:
             return new_solution_time - self.solution.solution_time
         else:
             return max(new_solution_time - self.solution.solution_time, 0)
 
-    def apply_move(self, best_move:MinimumInsertionMove):
+    def apply_move(self, best_move: MinimumInsertionMove):
         self.map.insert_vehicle_route(best_move.vehicle, best_move.node_to_add, best_move.target_pos+1)
+        print(f"new Solution time SHOULD BE {self.solution.solution_time + best_move.time_cost}")
+
         self.solution.compute_service_time()  # update slowest Vehicle
-        best_move.vehicle.update_cumul_time_cost()
+        print(f"New Solution time {self.solution.solution_time}")
+        best_move.vehicle.update_cumul_time_cost()  # update cumulative costs
         best_move.node_to_add.has_been_visited = True
 
 

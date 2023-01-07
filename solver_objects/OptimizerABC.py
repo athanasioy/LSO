@@ -44,19 +44,25 @@ class Optimizer(ABC):
             return False
         return True
 
-    def handle_move(self, move:OptimizerMove):
-        if (move.distance_cost < 0 and move.time_cost == 0) or (move.time_cost < 0):
+    def handle_move(self, move: OptimizerMove):
+        if move.move_cost < 0:
             self.add_move(move)
             self.run_again = True
 
-    def add_move(self, move:OptimizerMove):
+    def add_move(self, move: OptimizerMove):
         self.beneficial_moves.append(move)
 
     def apply_best_move(self):
         self.beneficial_moves.sort(key=lambda move: move.move_cost)
         best_move = self.beneficial_moves[0]
+        estimated_new_sol = self.solution.solution_time + best_move.time_cost
         self.apply_move(best_move.first_pos, best_move.second_pos, best_move.vehicle1, best_move.vehicle2)
         self.update_cache(best_move.vehicle1, best_move.vehicle2)
+        if abs(estimated_new_sol - self.solution.solution_time)>1:
+            print(f"EST:{estimated_new_sol}, ACT:{self.solution.solution_time}")
+            print(self)
+            print("WARN")
+            print(best_move)
         self.beneficial_moves = []
 
     def update_cache(self, *args):
@@ -67,3 +73,10 @@ class Optimizer(ABC):
 
     def iterator_controller(self):
         return self.run_again
+
+    def determine_new_solution_time(self, *args: tuple[Vehicle, float]) -> float:
+        vehicle_times_copy = self.solution.vehicle_times.copy()
+        for vehicle, time in args:
+            vehicle_times_copy.update({vehicle: time})
+        slowest_vehicle = max(vehicle_times_copy, key=lambda x: vehicle_times_copy.get(x))
+        return vehicle_times_copy.get(slowest_vehicle)

@@ -134,14 +134,17 @@ class Vehicle:
         for starting_node in distance_matrix:
             for destination_node in distance_matrix.get(starting_node):
                 dist = distance_matrix.get(starting_node).get(destination_node)
-                time_to_travel = (dist / self.vehicle_speed) * 60  # Convert to Minutes
-                time_to_travel += destination_node.unloading_time
+
+                if starting_node == destination_node:
+                    time_to_travel = 0
+                else:
+                    time_to_travel = (dist / self.vehicle_speed) * 60  # Convert to Minutes
+                    time_to_travel += destination_node.unloading_time
 
                 if self.time_matrix.get(starting_node) is None:
                     self.time_matrix[starting_node] = {}
 
                 self.time_matrix.get(starting_node).update({destination_node:time_to_travel})
-
 
     def get_route_service_time(self):
         service_time = 0

@@ -36,7 +36,6 @@ class SwapMoveOptimizer(Optimizer):
         for first_pos, second_pos in itertools.combinations(range(1, max_route_length), 2):  # Every possible swap
             # For every possible 2 vehicles
             for vehicle1, vehicle2 in itertools.combinations(self.solution.map.vehicles, 2):
-
                 # check if index position exits in said routes
                 if not self.feasible_combination(first_pos=first_pos,
                                                  second_pos=second_pos,
@@ -60,10 +59,10 @@ class SwapMoveOptimizer(Optimizer):
                     OptimizerMove(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2,
                                   distance_cost=distance_cost, time_cost=time_cost))
 
-    def apply_move(self,first_pos:int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle):
+    def apply_move(self, first_pos:int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle):
         """Apply Swap Move"""
         vehicle1.vehicle_route.node_sequence[first_pos], vehicle2.vehicle_route.node_sequence[second_pos] = vehicle2.vehicle_route.node_sequence[second_pos], vehicle1.vehicle_route.node_sequence[first_pos]
-
+        self.update_cache(vehicle1, vehicle2)
     def move_cost(self,
                   first_pos: int,
                   second_pos: int,
@@ -114,14 +113,9 @@ class SwapMoveOptimizer(Optimizer):
         vehicle1_new_time = vehicle1.vehicle_route.cumul_time_cost[-1] + vehicle1_net_effect
         vehicle2_new_time = vehicle2.vehicle_route.cumul_time_cost[-1] + vehicle2_net_effect
 
-        new_solution_time = max(vehicle1_new_time, vehicle2_new_time)
+        new_solution_time = self.determine_new_solution_time((vehicle1, vehicle1_new_time), (vehicle2, vehicle2_new_time))
 
-        if self.solution.slowest_vehicle not in (vehicle1, vehicle2):
-            # if solution doesn't affect slowest vehicle, solution time can only go up
-            return max(new_solution_time - self.solution.solution_time, 0)
-        else:
-            # if solution affects slowest vehicle, return net difference of new solution time minus old solution time
-            return new_solution_time - self.solution.solution_time
+        return new_solution_time - self.solution.solution_time
 
     def determine_time_costs(self, a, swap_node1, c, d, swap_node2, f,vehicle1:Vehicle, vehicle2:Vehicle):
 
@@ -161,7 +155,8 @@ class ReLocatorOptimizer(Optimizer):
         #             for second_pos in range(max_route_length):
         for vehicle1, vehicle2 in itertools.product(self.solution.map.vehicles, repeat=2):
             for first_pos, second_pos in itertools.combinations(range(1, max_route_length), 2):
-
+                if first_pos == 5 and second_pos ==6 and vehicle1.id == 7 and vehicle2.id == 24:
+                    print(1)
                 if not self.feasible_combination(first_pos=first_pos,
                                                  second_pos=second_pos,
                                                  vehicle1=vehicle1,
@@ -216,25 +211,21 @@ class ReLocatorOptimizer(Optimizer):
 
         return cost_removed, cost_added
 
-
     def determine_time_impact(self, first_pos: int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle)-> float:
         a, swap_node1, c = vehicle1.vehicle_route.get_adjacent_nodes(first_pos)
         d, swap_node2, f = vehicle2.vehicle_route.get_adjacent_nodes(second_pos)
 
-        time_added_vehicle2 , time_removed_vehicle1 = self.determine_time_costs(a,swap_node1,c,d,swap_node2,f,vehicle1,vehicle2)
+        time_added_vehicle2, time_added_vehicle1 = self.determine_time_costs(a,swap_node1,c,d,swap_node2,f,vehicle1,vehicle2)
 
-        new_vehicle_time2 = time_added_vehicle2 + vehicle2.get_route_service_time()
+        vehicle1_new_time = + vehicle1.vehicle_route.cumul_time_cost[-1] + time_added_vehicle1
+        vehicle2_new_time = vehicle2.vehicle_route.cumul_time_cost[-1] + time_added_vehicle2
 
-        # case when we are changing routes that do not concern slowest vehicle
-        if self.solution.slowest_vehicle not in (vehicle1,vehicle2):
-            # check if we got any slower from the slowest vehicle
-            return max(new_vehicle_time2 - self.solution.solution_time,0)
-        else:
-            return new_vehicle_time2 - self.solution.solution_time
+        new_solution_time = self.determine_new_solution_time((vehicle1, vehicle1_new_time), (vehicle2,vehicle2_new_time))
 
+        return new_solution_time - self.solution.solution_time
 
     def determine_time_costs(self, a, swap_node1, c, d, swap_node2, f, vehicle1:Vehicle, vehicle2:Vehicle):
-
+        """relocate swap node1 in front of swap node 2"""
         time_added_vehicle2 = vehicle2.time_matrix.get(swap_node2).get(swap_node1) + \
                               vehicle2.time_matrix.get(swap_node1).get(f) - \
                               vehicle2.time_matrix.get(swap_node2).get(f)
@@ -283,6 +274,8 @@ class TwoOptOptimizer(Optimizer):
         max_route_length = max(len(vehicle.vehicle_route.node_sequence) for vehicle in self.solution.map.vehicles)
         for vehicle1, vehicle2 in itertools.combinations(self.solution.map.vehicles, r=2):
             for first_pos, second_pos in itertools.combinations(range(1, max_route_length), 2):
+                if first_pos == 5 and second_pos == 6 and vehicle1.id == 1 and vehicle2.id == 12:
+                    print(1)
                 if not self.feasible_combination(first_pos=first_pos,
                                                  second_pos=second_pos,
                                                  vehicle1=vehicle1,
@@ -353,14 +346,9 @@ class TwoOptOptimizer(Optimizer):
                             vehicle2.time_matrix.get(d).get(c)+ \
                             vehicle1.vehicle_route.cumul_time_cost[-1] -vehicle1.vehicle_route.cumul_time_cost[first_pos+1]
 
-        new_solution_time = max(vehicle1_new_time, vehicle2_new_time)
+        new_solution_time = self.determine_new_solution_time((vehicle1,vehicle1_new_time) ,(vehicle2, vehicle2_new_time))
 
-        if self.solution.slowest_vehicle not in (vehicle1,vehicle2):
-            # if solution doesn't affect slowest vehicle, solution time can only go up
-            return max(new_solution_time - self.solution.solution_time,0)
-        else:
-            # if solution affects slowest vehicle, return net difference of new solution time minus old solution time
-            return new_solution_time - self.solution.solution_time
+        return new_solution_time - self.solution.solution_time
 
     def apply_move(self, first_pos, second_pos, vehicle1:Vehicle, vehicle2:Vehicle):
         """Apply TwoOpt Move"""

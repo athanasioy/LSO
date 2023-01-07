@@ -155,8 +155,6 @@ class ReLocatorOptimizer(Optimizer):
         #             for second_pos in range(max_route_length):
         for vehicle1, vehicle2 in itertools.product(self.solution.map.vehicles, repeat=2):
             for first_pos, second_pos in itertools.combinations(range(1, max_route_length), 2):
-                if first_pos == 5 and second_pos ==6 and vehicle1.id == 7 and vehicle2.id == 24:
-                    print(1)
                 if not self.feasible_combination(first_pos=first_pos,
                                                  second_pos=second_pos,
                                                  vehicle1=vehicle1,
@@ -346,7 +344,7 @@ class TwoOptOptimizer(Optimizer):
                             vehicle2.time_matrix.get(d).get(c)+ \
                             vehicle1.vehicle_route.cumul_time_cost[-1] -vehicle1.vehicle_route.cumul_time_cost[first_pos+1]
 
-        new_solution_time = self.determine_new_solution_time((vehicle1,vehicle1_new_time) ,(vehicle2, vehicle2_new_time))
+        new_solution_time = self.determine_new_solution_time((vehicle1, vehicle1_new_time),(vehicle2, vehicle2_new_time))
 
         return new_solution_time - self.solution.solution_time
 

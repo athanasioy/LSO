@@ -78,15 +78,15 @@ def main(random_seed: int) -> None:
 
     sw = SwapMoveOptimizer(solution)
     rl = ReLocatorOptimizer(solution)
-
     twoOpt = TwoOptOptimizer(solution)
     vnd = VND()
     vnd.add_pipeline(sw) # sw -> rl -> TwoOpt 259
     vnd.add_pipeline(rl) # rl -> sw -> twoOpt 241 sw -> rl -> twoOpt 237
     vnd.add_pipeline(twoOpt)
     #
-    vnd.run()
-
+    # vnd.run()
+    tabuReloc = TabuReloc(solution=solution, limit=10000, tabu_expander=80)
+    tabuReloc.run()
     end_time = time.time()
     solution.run_checks()
     print(f"Algorithm and Optimizer finished in {end_time - start_time} seconds")
@@ -94,11 +94,11 @@ def main(random_seed: int) -> None:
     print(f"Slowest Vehicle was {solution.slowest_vehicle} with route {solution.slowest_vehicle.vehicle_route}")
     print(f"Slowest Route total demand {solution.slowest_vehicle.vehicle_route.get_total_route_demand()}")
     print(f"Slowest Route Total Distance {solution.slowest_vehicle.vehicle_route.get_total_distance()}")
-    # for vehicle in solution.map.vehicles:
-    #     print(f"{vehicle},{vehicle.get_route_service_time()}")
+    for vehicle in solution.map.vehicles:
+        print(f"{vehicle},{vehicle.get_route_service_time()}")
 
     ui2 = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=node_map.vehicles)
-    # ui2.plot_routes()
+    ui2.plot_routes()
 
 
 if __name__ == "__main__":

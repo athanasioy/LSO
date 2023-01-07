@@ -56,8 +56,8 @@ class Solution:
             return
 
         for vehicle in self.map.vehicles:
-            if vehicle.vehicle_route.get_total_route_demand() <= vehicle.vehicle_capacity:
-                raise ValueError(f"Vehicle {vehicle} exceeds total capacity with {vehicle.vehicle_route.get_total_route_demand()}  ")
+            if vehicle.vehicle_route.get_total_route_demand() > vehicle.vehicle_capacity:
+                raise ValueError(f"Vehicle {vehicle} exceeds total capacity {vehicle.vehicle_capacity} with {vehicle.vehicle_route.get_total_route_demand()}  ")
 
     def duplicate_nodes(self) -> None:
         """Check if inside the route there are nodes that are visited two times"""

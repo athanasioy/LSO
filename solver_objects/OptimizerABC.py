@@ -55,8 +55,12 @@ class Optimizer(ABC):
     def apply_best_move(self):
         self.beneficial_moves.sort(key=lambda move: move.move_cost)
         best_move = self.beneficial_moves[0]
+        old_time = self.solution.solution_time
         self.apply_move(best_move.first_pos, best_move.second_pos, best_move.vehicle1, best_move.vehicle2)
         self.update_cache(best_move.vehicle1, best_move.vehicle2)
+        new_time = self.solution.solution_time
+        if old_time > new_time:
+            print(F"OLD: {old_time}, ACT{new_time}")
         self.beneficial_moves = []
 
     def update_cache(self, *args):

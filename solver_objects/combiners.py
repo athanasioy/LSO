@@ -1,3 +1,4 @@
+from draw.ui import UI
 from solver_objects.move import OptimizerMove
 from solver_objects.optimizer import ReLocatorOptimizer
 from solver_objects.OptimizerABC import Optimizer
@@ -6,8 +7,9 @@ from typing import List
 
 
 class VND:
-    def __init__(self):
+    def __init__(self, ui: UI):
         self.algos: List[Optimizer] = []
+        self.ui = ui
 
     def add_pipeline(self, algo: Optimizer):
         self.algos.append(algo)
@@ -15,13 +17,18 @@ class VND:
     def run(self):
         index = 0
         while index < len(self.algos):
-            print(index)
             self.algos[index].generate_solution_space()
             if self.algos[index].beneficial_moves:
+                print(index)
+                old_time = self.algos[index].solution.solution_time
                 self.algos[index].apply_best_move()
+                new_time = self.algos[index].solution.solution_time
+                if self.ui and new_time<old_time:
+                    self.ui.save_plot(dir=r'C:\Users\aneme\PycharmProjects\LGO\images', name=f"{new_time}.png")
                 index = 0
             else:
                 index += 1
+
 
 
 class TabuReloc(ReLocatorOptimizer):

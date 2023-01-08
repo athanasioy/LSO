@@ -101,6 +101,7 @@ class BaseAlgo2:
             end = self.check_if_ended()
             print(f"iteration {c}")
             c+=1
+
     def run_iteration(self):
 
         for vehicle in self.map.vehicles:
@@ -111,13 +112,13 @@ class BaseAlgo2:
                 self.map.update_vehicle_position(vehicle)
                 self.map.update_node(node)
 
-    def find_next_nodes(self, vehicle:Vehicle) -> Node:
+    def find_next_nodes(self, vehicle: Vehicle) -> Node:
 
 
         vehicle_pos = vehicle.vehicle_route.get_last_node()
 
         distances = self.map.distance_matrix.get(vehicle_pos)
-        distances = {node:dist for node,dist in distances.items() if not node.has_been_visited and vehicle.has_enough_capacity(node.demand)}
+        distances = {node: dist for node, dist in distances.items() if not node.has_been_visited and vehicle.has_enough_capacity(node.demand)}
 
         if not distances:
             return None
@@ -141,9 +142,9 @@ class BaseAlgo2:
 
 class MinimumInsertions:
     
-    def __init__(self, _map: MapManager):
+    def __init__(self, _map: MapManager, solution: Solution):
         self.map = _map
-        self.solution = Solution(_map)
+        self.solution = solution
         self.solution.compute_service_time()
         self.map.update_cumul_costs()
         self.insertions = 0
@@ -174,8 +175,6 @@ class MinimumInsertions:
 
                 for j in range(len(vehicle.vehicle_route.node_sequence)):
                     _, target_node, c = vehicle.vehicle_route.get_adjacent_nodes(j)
-                    if node.id == 184:
-                        print(1)
                     distance_added, distance_removed = self.determine_distance_costs(target_node, c, node, vehicle)
                     distance_cost = distance_added - distance_removed
                     time_cost = self.determine_time_cost(target_node,c, node, vehicle)
@@ -223,10 +222,8 @@ class MinimumInsertions:
 
     def apply_move(self, best_move: MinimumInsertionMove):
         self.map.insert_vehicle_route(best_move.vehicle, best_move.node_to_add, best_move.target_pos+1)
-        print(f"new Solution time SHOULD BE {self.solution.solution_time + best_move.time_cost}")
 
         self.solution.compute_service_time()  # update slowest Vehicle
-        print(f"New Solution time {self.solution.solution_time}")
         best_move.vehicle.update_cumul_time_cost()  # update cumulative costs
         best_move.node_to_add.has_been_visited = True
 

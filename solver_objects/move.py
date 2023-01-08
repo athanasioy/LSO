@@ -14,7 +14,7 @@ class OptimizerMove:
     move_cost: float = field(init=False)
 
     def __post_init__(self):
-        self.move_cost = 100000*self.time_cost + self.distance_cost
+        self.move_cost = 1000*self.time_cost + self.distance_cost
 
 
 @dataclass
@@ -27,4 +27,4 @@ class MinimumInsertionMove:
     move_cost: float = field(init=False)
 
     def __post_init__(self):
-        self.move_cost = 10000000 * self.time_cost + self.distance_cost
+        self.move_cost = 1000 * self.time_cost + self.distance_cost

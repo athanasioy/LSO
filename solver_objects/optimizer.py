@@ -149,11 +149,10 @@ class ReLocatorOptimizer(Optimizer):
 
     def generate_solution_space(self):
         max_route_length = max(len(vehicle.vehicle_route.node_sequence) for vehicle in self.solution.map.vehicles)
-        # for vehicle1 in self.solution.map.vehicles:
-        #     for first_pos in range(max_route_length):
-        #         for vehicle2 in self.solution.map.vehicles:
-        #             for second_pos in range(max_route_length):
+
+        # for every single intra-route and inter-route combination
         for vehicle1, vehicle2 in itertools.product(self.solution.map.vehicles, repeat=2):
+            # check combinations
             for first_pos, second_pos in itertools.combinations(range(1, max_route_length), 2):
                 if not self.feasible_combination(first_pos=first_pos,
                                                  second_pos=second_pos,
@@ -168,9 +167,9 @@ class ReLocatorOptimizer(Optimizer):
                     continue
 
                 cost: float = self.move_cost(first_pos=first_pos,
-                                                             second_pos=second_pos,
-                                                             vehicle1=vehicle1,
-                                                             vehicle2=vehicle2)
+                                             second_pos=second_pos,
+                                             vehicle1=vehicle1,
+                                             vehicle2=vehicle2)
 
                 time_impact = self.determine_time_impact(first_pos=first_pos,
                                                          second_pos=second_pos,
@@ -178,9 +177,13 @@ class ReLocatorOptimizer(Optimizer):
                                                          vehicle2=vehicle2)
 
                 self.handle_move(
-                    OptimizerMove(first_pos=first_pos, second_pos=second_pos, vehicle1=vehicle1, vehicle2=vehicle2, distance_cost=cost, time_cost=time_impact)
+                    OptimizerMove(first_pos=first_pos,
+                                  second_pos=second_pos,
+                                  vehicle1=vehicle1,
+                                  vehicle2=vehicle2,
+                                  distance_cost=cost,
+                                  time_cost=time_impact)
                 )
-
 
     def move_cost(self, first_pos: int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle) -> float:
         a, swap_node1, c = vehicle1.vehicle_route.get_adjacent_nodes(first_pos)
@@ -234,10 +237,8 @@ class ReLocatorOptimizer(Optimizer):
 
         return time_added_vehicle2, time_added_vehicle1
 
-
     def apply_move(self, first_pos, second_pos, vehicle1, vehicle2):
         """Apply Relocation Move"""
-
         vehicle2.vehicle_route.node_sequence.insert(second_pos+1, vehicle1.vehicle_route.node_sequence[first_pos])
         if vehicle1 == vehicle2 and first_pos > second_pos:
             # in case of intra-route relocations, when we relocate behind, we have to delete the index +1
@@ -272,8 +273,6 @@ class TwoOptOptimizer(Optimizer):
         max_route_length = max(len(vehicle.vehicle_route.node_sequence) for vehicle in self.solution.map.vehicles)
         for vehicle1, vehicle2 in itertools.combinations(self.solution.map.vehicles, r=2):
             for first_pos, second_pos in itertools.combinations(range(1, max_route_length), 2):
-                if first_pos == 5 and second_pos == 6 and vehicle1.id == 1 and vehicle2.id == 12:
-                    print(1)
                 if not self.feasible_combination(first_pos=first_pos,
                                                  second_pos=second_pos,
                                                  vehicle1=vehicle1,
@@ -287,9 +286,9 @@ class TwoOptOptimizer(Optimizer):
                     continue
 
                 cost: float = self.move_cost(first_pos=first_pos,
-                                                          second_pos=second_pos,
-                                                          vehicle1=vehicle1,
-                                                          vehicle2=vehicle2)
+                                             second_pos=second_pos,
+                                             vehicle1=vehicle1,
+                                             vehicle2=vehicle2)
 
                 time_impact = self.determine_time_impact(first_pos=first_pos,
                                                          second_pos=second_pos,

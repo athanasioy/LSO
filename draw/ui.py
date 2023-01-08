@@ -3,6 +3,7 @@ from typing import List
 import matplotlib.pyplot as plt
 
 from map_objects.node import Node, Vehicle
+import os
 
 
 class UI:
@@ -36,3 +37,29 @@ class UI:
             ax.plot(x_cords, y_cords, color=cmap(index / len(self.vehicles)), linewidth=2, label=vehicle)
         ax.legend()
         plt.show()
+
+    def save_plot(self, dir: str, name: str):
+        fig, ax = plt.subplots(figsize=(8, 10))
+
+        ax.scatter(self.home_depot.x_cord, self.home_depot.y_cord, c='red', s=35)
+
+        for node in self.customer_nodes:
+            ax.scatter(node.x_cord, node.y_cord, c='black', s=15)
+            ax.text(node.x_cord, node.y_cord, s=node.demand)
+            ax.text(node.x_cord+2, node.y_cord+2, s=node.id)
+
+        cmap = plt.colormaps['nipy_spectral']
+
+        for index, vehicle in enumerate(self.vehicles):
+            x_cords = []
+            y_cords = []
+
+            for i in range(len(vehicle.vehicle_route.node_sequence) - 1):
+                x_cords += [node.x_cord for node in vehicle.vehicle_route.node_sequence[i: i + 2]]
+                y_cords += [node.y_cord for node in vehicle.vehicle_route.node_sequence[i: i + 2]]
+
+            ax.plot(x_cords, y_cords, color=cmap(index / len(self.vehicles)), linewidth=2, label=vehicle)
+        ax.legend()
+        path = os.path.join(dir, name)
+        plt.savefig(path)
+

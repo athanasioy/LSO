@@ -69,8 +69,6 @@ class SwapMoveOptimizer(Optimizer):
                   vehicle1: Vehicle,
                   vehicle2: Vehicle) -> float:
 
-        # vehicle1: Vehicle = self.solution.map.vehicles[vehicle1_pos]
-        # vehicle2: Vehicle = self.solution.map.vehicles[vehicle2_pos]
 
         a, swap_node1, c = vehicle1.vehicle_route.get_adjacent_nodes(first_pos)
         d, swap_node2, f = vehicle2.vehicle_route.get_adjacent_nodes(second_pos)

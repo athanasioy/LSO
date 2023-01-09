@@ -60,10 +60,10 @@ class Optimizer(ABC):
         self.update_cache(best_move.vehicle1, best_move.vehicle2)
         new_time = self.solution.solution_time
         if old_time > new_time:
-            print(F"OLD: {old_time}, ACT{new_time}")
+            print(F"OLD: {old_time}, NEW :{new_time}")
         self.beneficial_moves = []
 
-    def update_cache(self, *args):
+    def update_cache(self, *args: Vehicle):
         for vehicle in args:
             vehicle.update_cumul_time_cost()
             vehicle.vehicle_route.update_cumul_distance_cost()
@@ -73,6 +73,10 @@ class Optimizer(ABC):
         return self.run_again
 
     def determine_new_solution_time(self, *args: tuple[Vehicle, float]) -> float:
+        """
+        Compute on the fly new solution time by copying dictionaries of vehicle times
+        Returns a float that represents new slowest route
+        """
         vehicle_times_copy = self.solution.vehicle_times.copy()
         for vehicle, time in args:
             vehicle_times_copy.update({vehicle: time})

@@ -8,7 +8,7 @@ from solver_objects.algorithm import BaseAlgo2, BetterAlgo, MinimumInsertions
 from map_objects.mapmanager import MapManager
 from map_objects.node import Node, Vehicle
 from solver_objects.optimizer import SwapMoveOptimizer, ReLocatorOptimizer, TwoOptOptimizer
-from solver_objects.combiners import VND, TabuReloc
+from solver_objects.combiners import VND, TabuReloc, TwoOptTabuSearch
 from solver_objects.solution import Solution
 
 
@@ -80,6 +80,9 @@ def main(random_seed: int) -> None:
     vnd.add_pipeline(rl)  # rl -> sw -> twoOpt 241 sw -> rl -> twoOpt 237
     vnd.add_pipeline(twoOpt)
     vnd.run()
+    twoOptTS = TwoOptTabuSearch(solution=solution, limit=4000, tabu_expander=50)
+    twoOptTS.run()
+
     solution.run_checks()
 
     printer.print_solution()

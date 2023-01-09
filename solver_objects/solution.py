@@ -18,7 +18,6 @@ class Solution:
 
     def compute_service_time(self) -> Tuple[float, Vehicle]:
         max_time = 0
-        slowest_vehicle = None
         for vehicle in self.map.vehicles:
             time = self.compute_route_time(vehicle)
             self.vehicle_times.update({vehicle: time})
@@ -29,6 +28,12 @@ class Solution:
         self.solution_time = self.vehicle_times.get(slowest_vehicle)
         return max_time, slowest_vehicle
 
+    def update_service_time_from_cache(self, *args: tuple[Vehicle, float]):
+        """Set new solution time by updates cached route times"""
+        for vehicle, time in args:
+            self.vehicle_times.update({vehicle: time})
+        self.slowest_vehicle = max(self.vehicle_times, key=lambda x: self.vehicle_times.get(x))
+        self.solution_time = self.vehicle_times.get(self.slowest_vehicle)
     @staticmethod
     def compute_route_time(vehicle: Vehicle) -> float:
         time_to_travel: float = 0

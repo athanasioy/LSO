@@ -1,16 +1,14 @@
 import random
 import configparser
-import time
 from typing import List
 
 from map_objects.printer import Printer
 from solver_objects.algorithm import BaseAlgo2, BetterAlgo, MinimumInsertions
 from map_objects.mapmanager import MapManager
 from map_objects.node import Node, Vehicle
-from solver_objects.optimizer import SwapMoveOptimizer, ReLocatorOptimizer, TwoOptOptimizer
-from solver_objects.combiners import VND, TabuReloc, TwoOptTabuSearch
+from solver_objects.optimizer import SwapMoveOptimizer, ReLocatorOptimizer, TwoOptOptimizer, RemoveCrissCross
+import solver_objects.combiners
 from solver_objects.solution import Solution
-
 
 from draw.ui import UI
 
@@ -59,34 +57,42 @@ def main(random_seed: int) -> None:
     node_map = MapManager(nodes=nodes, vehicles=vehicles)
     solution = Solution(node_map)
 
-    greedy_algo = MinimumInsertions(_map= node_map, solution=solution)
+    greedy_algo = MinimumInsertions(_map=node_map, solution=solution)
+    # greedy_algo = BaseAlgo2(_map=node_map)
     # greedy_algo = BetterAlgo(_map = node_map)
     greedy_algo.run()
 
     solution.run_checks()
     solution.compute_service_time()
-
+    #
     printer = Printer(solution)
     printer.print_solution()
-
-
+    #
     sw = SwapMoveOptimizer(solution)
     rl = ReLocatorOptimizer(solution)
     twoOpt = TwoOptOptimizer(solution)
+    cc = RemoveCrissCross(solution)
     ui2 = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=node_map.vehicles)
-
-    vnd = VND(ui2)
+    #
+    vnd = solver_objects.combiners.VND()
     vnd.add_pipeline(sw)  # sw -> rl -> TwoOpt 259
     vnd.add_pipeline(rl)  # rl -> sw -> twoOpt 241 sw -> rl -> twoOpt 237
     vnd.add_pipeline(twoOpt)
+    # TSTwoOpt = solver_objects.combiners.TwoOptTabuSearchWithMemory(solution, memory_limit=15, limit=500)
+    # TSTwoOpt.run()
     vnd.run()
-    twoOptTS = TwoOptTabuSearch(solution=solution, limit=4000, tabu_expander=50)
-    twoOptTS.run()
-
+    # cc.run()
+    #
+    GLS = solver_objects.combiners.VNDGLS(random_seed=1, limit=2000, solution=solution)
+    GLS.add_pipeline(sw)
+    GLS.add_pipeline(rl)
+    GLS.add_pipeline(twoOpt)
+    # GLS.run()
+    solution.compute_service_time()
     solution.run_checks()
-
     printer.print_solution()
-
+    printer.print_vehicle_time()
+    print(f"Solution time {solution.solution_time}")
     ui2.plot_routes()
 
 

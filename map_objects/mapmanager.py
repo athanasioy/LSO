@@ -1,5 +1,6 @@
 import itertools
 import math
+from copy import deepcopy
 from typing import List, Dict
 
 from map_objects.node import Node, Vehicle
@@ -11,9 +12,11 @@ class MapManager:
         self.vehicles = vehicles
         self.depot = vehicles[0].vehicle_route.node_sequence[0]  # save depot on mapManager
         self.distance_matrix: Dict[Node, Dict[Node, float]] = {}
+        self.penalized_distance_matrix: Dict[Node, Dict[Node, float]] = {}
         self.compute_distance_matrix()
         for vehicle in self.vehicles:
             vehicle.compute_time_matrix(distance_matrix=self.distance_matrix)
+            vehicle.penalized_time_matrix = vehicle.time_matrix.copy()
 
     @staticmethod
     def add_vehicle_route(vehicle: Vehicle, node: Node):
@@ -49,5 +52,9 @@ class MapManager:
             if not self.distance_matrix.get(node1):  # is None:
                 self.distance_matrix[node1] = {}
 
-            self.distance_matrix.get(node1).update({node2:dist})
+            if not self.penalized_distance_matrix.get(node1):
+                self.penalized_distance_matrix[node1] = {}
+
+            self.distance_matrix.get(node1).update({node2: dist})
+            self.penalized_distance_matrix.get(node1).update({node2: dist})
 

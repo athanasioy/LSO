@@ -21,4 +21,4 @@ class Printer:
 
     def print_vehicle_demand(self):
         for vehicle in self.solution.map.vehicles:
-            print(f"{vehicle},{vehicle.vehicle_route.cumul_cost[-1]}")
+            print(f"{vehicle},{vehicle.vehicle_route.cumul_demand[-1]}")

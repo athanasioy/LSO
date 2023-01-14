@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 from map_objects.node import Vehicle
-from solver_objects.move import OptimizerMove
+from solver_objects.move import OptimizerMove, DistanceType
 from solver_objects.solution import Solution
 
 
@@ -10,15 +10,18 @@ class Optimizer(ABC):
     beneficial_moves: List[OptimizerMove]
     solution: Solution
     run_again: bool
+    distances: DistanceType
 
     @abstractmethod
-    def generate_solution_space(self):
+    def generate_solution_space(self, distance: DistanceType):
         """Generate all possible moves"""
         pass
+
     @abstractmethod
     def move_cost(self, first_pos: int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle) -> float:
         """Return True if move gives lower cost"""
         pass
+
     @staticmethod
     @abstractmethod
     def capacity_check(first_pos: int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle) -> bool:
@@ -31,7 +34,7 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def apply_move(self,first_pos:int, second_pos:int, vehicle1:Vehicle, vehicle2:Vehicle):
+    def apply_move(self, first_pos: int, second_pos: int, vehicle1: Vehicle, vehicle2: Vehicle):
         """Apply Move"""
         pass
 
@@ -57,28 +60,63 @@ class Optimizer(ABC):
         best_move = self.beneficial_moves[0]
         old_time = self.solution.solution_time
         self.apply_move(best_move.first_pos, best_move.second_pos, best_move.vehicle1, best_move.vehicle2)
-        self.update_cache(best_move.vehicle1, best_move.vehicle2)
+        self.update_cache((best_move.vehicle1, best_move.vehicle1_new_time),
+                          (best_move.vehicle2, best_move.vehicle2_new_time))
         new_time = self.solution.solution_time
+
         if old_time > new_time:
-            print(F"OLD: {old_time}, NEW :{new_time}")
+            print(F"OLD: {old_time}, NEW :{new_time}, {self.solution.compute_total_distance()}")
         self.beneficial_moves = []
 
-    def update_cache(self, *args: Vehicle):
-        for vehicle in args:
-            vehicle.update_cumul_time_cost()
-            vehicle.vehicle_route.update_cumul_distance_cost()
+    def update_cache(self, *args: tuple[Vehicle, float]):
+        for arg in args:
+            arg[0].update_cumul_time_cost()
+            arg[0].vehicle_route.update_cumul_distance_cost()
+        # self.solution.update_service_time_from_cache(*args)
         self.solution.compute_service_time()
 
     def iterator_controller(self):
         return self.run_again
 
-    def determine_new_solution_time(self, *args: tuple[Vehicle, float]) -> float:
+    def determine_new_solution_time(self, *args: tuple[Vehicle, float], distance: DistanceType) -> float:
         """
         Compute on the fly new solution time by copying dictionaries of vehicle times
         Returns a float that represents new slowest route
         """
-        vehicle_times_copy = self.solution.vehicle_times.copy()
+        if distance == DistanceType.PENALIZED:
+            vehicle_times_copy = self.solution.penalized_vehicle_times.copy()
+        else:
+            vehicle_times_copy = self.solution.vehicle_times.copy()
+
         for vehicle, time in args:
             vehicle_times_copy.update({vehicle: time})
         slowest_vehicle = max(vehicle_times_copy, key=lambda x: vehicle_times_copy.get(x))
         return vehicle_times_copy.get(slowest_vehicle)
+
+    def determine_time_matrix(self, vehicle1: Vehicle, vehicle2: Vehicle):
+        if self.distances == DistanceType.PENALIZED:
+            time_distances_vehicle1 = vehicle1.penalized_time_matrix
+            time_distances_vehicle2 = vehicle2.penalized_time_matrix
+        else:
+            time_distances_vehicle1 = vehicle1.time_matrix
+            time_distances_vehicle2 = vehicle2.time_matrix
+
+        return time_distances_vehicle1, time_distances_vehicle2
+
+    def determine_distance_matrix(self):
+        if self.distances == DistanceType.PENALIZED:
+            distances = self.solution.map.penalized_distance_matrix
+        else:
+            distances = self.solution.map.distance_matrix
+
+        return distances
+
+    def determine_cumuls_costs(self, vehicle1: Vehicle, vehicle2: Vehicle):
+        if self.distances == DistanceType.PENALIZED:
+            cumul_time1 = vehicle1.vehicle_route.penalized_cumul_time_cost
+            cumul_time2 = vehicle2.vehicle_route.penalized_cumul_time_cost
+        else:
+            cumul_time1 = vehicle1.vehicle_route.cumul_time_cost
+            cumul_time2 = vehicle2.vehicle_route.cumul_time_cost
+
+        return cumul_time1, cumul_time2

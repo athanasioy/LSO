@@ -14,13 +14,16 @@ class Solution:
         self.map = Map
         self.solution_time: float
         self.vehicle_times: dict[Vehicle, float] = {}
+        self.penalized_vehicle_times: dict[Vehicle, float] = {}
         self.solution_time, self.slowest_vehicle = self.compute_service_time()  # update self.solution_time and slowest_vehicle
 
     def compute_service_time(self) -> Tuple[float, Vehicle]:
         max_time = 0
         for vehicle in self.map.vehicles:
             time = self.compute_route_time(vehicle)
+            penalized_time = self.compute_penalized_route_time(vehicle)
             self.vehicle_times.update({vehicle: time})
+            self.penalized_vehicle_times.update({vehicle: penalized_time})
 
         slowest_vehicle = max(self.vehicle_times, key=lambda x: self.vehicle_times.get(x))
 
@@ -34,6 +37,7 @@ class Solution:
             self.vehicle_times.update({vehicle: time})
         self.slowest_vehicle = max(self.vehicle_times, key=lambda x: self.vehicle_times.get(x))
         self.solution_time = self.vehicle_times.get(self.slowest_vehicle)
+
     @staticmethod
     def compute_route_time(vehicle: Vehicle) -> float:
         time_to_travel: float = 0
@@ -42,6 +46,17 @@ class Solution:
             destination_node = vehicle.vehicle_route.node_sequence[i + 1]
 
             time_to_travel += vehicle.time_matrix.get(starting_node).get(destination_node)
+
+        return time_to_travel
+
+    @staticmethod
+    def compute_penalized_route_time(vehicle: Vehicle) -> float:
+        time_to_travel: float = 0
+        for i in range(len(vehicle.vehicle_route.node_sequence) - 1):
+            starting_node = vehicle.vehicle_route.node_sequence[i]
+            destination_node = vehicle.vehicle_route.node_sequence[i + 1]
+
+            time_to_travel += vehicle.penalized_time_matrix.get(starting_node).get(destination_node)
 
         return time_to_travel
 
@@ -56,13 +71,15 @@ class Solution:
 
     def check_capacity(self) -> None:
         """check all routes capacity"""
-        if all(vehicle.vehicle_route.get_total_route_demand() <= vehicle.vehicle_capacity for vehicle in self.map.vehicles):
+        if all(vehicle.vehicle_route.get_total_route_demand() <= vehicle.vehicle_capacity for vehicle in
+               self.map.vehicles):
             print('all good with capacity')
             return
 
         for vehicle in self.map.vehicles:
             if vehicle.vehicle_route.get_total_route_demand() > vehicle.vehicle_capacity:
-                raise ValueError(f"Vehicle {vehicle} exceeds total capacity {vehicle.vehicle_capacity} with {vehicle.vehicle_route.get_total_route_demand()}  ")
+                raise ValueError(
+                    f"Vehicle {vehicle} exceeds total capacity {vehicle.vehicle_capacity} with {vehicle.vehicle_route.get_total_route_demand()}  ")
 
     def duplicate_nodes(self) -> None:
         """Check if inside the route there are nodes that are visited two times"""
@@ -94,5 +111,11 @@ class Solution:
         self.check_multiple_visits()
         self.check_capacity()
         self.all_routes_start_from_depot()
+        self.all_nodes_visited()
 
-
+    def all_nodes_visited(self):
+        route_sets = [set(vehicle.vehicle_route.node_sequence[1:]) for vehicle in self.map.vehicles]
+        union_between_routes = set.union(*route_sets)
+        if len(union_between_routes) != len(self.map.nodes) - 1:
+            print('NODES UNVISITED')
+            raise ValueError('Nodes are Unvisited')

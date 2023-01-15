@@ -227,7 +227,7 @@ class MinimumInsertions:
         best_move.vehicle.update_cumul_time_cost()  # update cumulative costs
         best_move.node_to_add.has_been_visited = True
 
-    def determine_new_solution_time(self, *args: tuple[Vehicle, float]) -> float:
+    def determine_new_solution_time(self, *args: Tuple[Vehicle, float]) -> float:
         """
         Compute on the fly new solution time by copying dictionaries of vehicle times
         Returns a float that represents new slowest route
@@ -291,7 +291,7 @@ class MinimumInsertionsTree(MinimumInsertions):
             nodes_copy
             routes_copy = self.map.vehicles.copy()
 
-    def find_next_best_move(self) -> list[MinimumInsertionMove]:
+    def find_next_best_move(self) -> List[MinimumInsertionMove]:
 
         best_move = None
         best_moves = []

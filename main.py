@@ -71,7 +71,7 @@ def main(random_seed: int) -> None:
     rl = ReLocatorOptimizer(solution)
     twoOpt = TwoOptOptimizer(solution)
 
-    GLS = solver_objects.combiners.VNDGLS(random_seed=2, limit=10, solution=solution)
+    GLS = solver_objects.combiners.VNDGLS(random_seed=1, limit=1000, solution=solution)
     GLS.add_pipeline(sw)
     GLS.add_pipeline(rl)
     GLS.add_pipeline(twoOpt)

@@ -287,7 +287,7 @@ class ReLocatorOptimizer(Optimizer):
     def determine_time_impact(self, first_pos: int,
                               second_pos: int,
                               vehicle1: Vehicle,
-                              vehicle2: Vehicle) -> tuple[float, float, float]:
+                              vehicle2: Vehicle) -> Tuple[float, float, float]:
 
         a, swap_node1, c = vehicle1.vehicle_route.get_adjacent_nodes(first_pos)
         d, swap_node2, f = vehicle2.vehicle_route.get_adjacent_nodes(second_pos)
@@ -456,7 +456,7 @@ class TwoOptOptimizer(Optimizer):
     def determine_time_impact(self, first_pos,
                               second_pos,
                               vehicle1: Vehicle,
-                              vehicle2: Vehicle) -> tuple[float, float, float]:
+                              vehicle2: Vehicle) -> Tuple[float, float, float]:
         """ Make sure we are not making the solution worse"""
         a, swap_node1, c = vehicle1.vehicle_route.get_adjacent_nodes(first_pos)
         d, swap_node2, f = vehicle2.vehicle_route.get_adjacent_nodes(second_pos)

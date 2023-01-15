@@ -74,7 +74,7 @@ class Optimizer(ABC):
             print(F"OLD: {old_time}, NEW :{new_time}, {self.solution.compute_total_distance()}")
         self.beneficial_moves = []
 
-    def update_cache(self, *args: tuple[Vehicle, float]):
+    def update_cache(self, *args: Tuple[Vehicle, float]):
         for arg in args:
             arg[0].update_cumul_time_cost()
             arg[0].vehicle_route.update_cumul_distance_cost()
@@ -84,7 +84,7 @@ class Optimizer(ABC):
     def iterator_controller(self):
         return self.run_again
 
-    def determine_new_solution_time(self, *args: tuple[Vehicle, float], distance: DistanceType) -> float:
+    def determine_new_solution_time(self, *args: Tuple[Vehicle, float], distance: DistanceType) -> float:
         """
         Compute on the fly new solution time by copying dictionaries of vehicle times
         Returns a float that represents new slowest route

@@ -8,6 +8,8 @@ The objective of the problem is to minimize the time that the last customer is s
 
 For fully reproducible results, run the main.py as is. The other files contain objects that were used during experimentation and are not part of the final solution.
 
+Run Time: 259 seconds on AMD-Ryzen 3, Ubuntu, 8-GB RAM
+Solution Time: 224.2 Minutes
 
 ### Main Files Explaination
 

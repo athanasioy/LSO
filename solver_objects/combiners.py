@@ -24,11 +24,83 @@ class VND(VNDCombiner):
         while index < len(self.algos):
             self.algos[index].generate_solution_space()
             if self.algos[index].beneficial_moves:
+                print(index)
                 self.algos[index].apply_best_move()
                 index = 0
             else:
                 index += 1
 
+class VND_Penalized(VNDCombiner):
+
+    def __init__(self, limit: int, solution: Solution):
+        super().__init__()
+        self.limit = limit
+        self.times_penalized = {}
+        self.solution = solution
+        self.initialize_times_penalized()
+
+    def run(self):
+        index = 0
+        counter = 0
+        while counter < self.limit:
+            self.algos[index].generate_solution_space(DistanceType.PENALIZED)
+            print(counter)
+            if self.algos[index].beneficial_moves:
+                print(index)
+                self.algos[index].apply_best_move()
+                index = 0
+                counter += 1
+            else:
+                index += 1
+            if index == len(self.algos):
+                self.penalize_arcs()
+                print('Penalized')
+                index = 0
+
+    def initialize_times_penalized(self):
+
+        for node1, node2 in itertools.product(self.solution.map.nodes, repeat=2):
+
+            if not self.times_penalized.get(node1):  # is None:
+                self.times_penalized[node1] = {}
+
+            self.times_penalized.get(node1).update({node2: 1})
+
+    def penalize_arcs(self):
+        max_criterion = 0
+        pen_1 = -1
+        pen_2 = -1
+        vehicle = None
+        for vehicle in self.solution.map.vehicles:
+            rt = vehicle
+            for j in range(len(rt.vehicle_route.node_sequence) - 1):
+                id1 = rt.vehicle_route.node_sequence[j]
+                id2 = rt.vehicle_route.node_sequence[j + 1]
+                criterion = self.solution.map.distance_matrix.get(id1).get(id2) / (1 + self.times_penalized[id1][id2])
+
+                if criterion > max_criterion:
+                    max_criterion = criterion
+                    pen_1 = id1
+                    pen_2 = id2
+                    vehicle = rt
+
+        self.times_penalized[pen_1][pen_2] += 1
+        self.times_penalized[pen_2][pen_1] += 1
+
+        pen_weight = 0.15
+
+        self.solution.map.penalized_distance_matrix[pen_1][pen_2] = (1 + pen_weight * self.times_penalized[pen_1][
+            pen_2]) * self.solution.map.distance_matrix[pen_1][pen_2]
+        self.solution.map.penalized_distance_matrix[pen_2][pen_1] = (1 + pen_weight * self.times_penalized[pen_2][
+            pen_1]) * self.solution.map.distance_matrix[pen_2][pen_1]
+
+        vehicle.penalized_time_matrix[pen_1][pen_2] = (1 + pen_weight * self.times_penalized[pen_1][
+            pen_2]) * vehicle.time_matrix[pen_1][pen_2]
+        vehicle.penalized_time_matrix[pen_2][pen_1] = (1 + pen_weight * self.times_penalized[pen_2][
+            pen_1]) * vehicle.time_matrix[pen_2][pen_1]
+
+        self.penalized_n1_ID = pen_1
+        self.penalized_n2_ID = pen_2
 
 class VNDGLS(VNDCombiner):
     def __init__(self, random_seed: int, limit: int, solution: Solution):
@@ -46,6 +118,7 @@ class VNDGLS(VNDCombiner):
             index = random.randint(0, len(self.algos) - 1)
             self.algos[index].generate_solution_space(DistanceType.PENALIZED)
             if self.algos[index].beneficial_moves:
+                print(self.algos[index])
                 self.algos[index].apply_best_move()
             else:
                 print('Penalized')

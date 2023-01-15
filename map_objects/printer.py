@@ -6,14 +6,27 @@ class Printer:
         self.solution = solution
 
     def print_solution(self):
+        lines = []
+
         print("Objective:")
+        lines.append("Objective:"+"\n")
         print(f"{self.solution.solution_time/60:.5} hr")
+        lines.append(f"{self.solution.solution_time/60:.5} hr"+"\n")
         print("Routes:")
+        lines.append("Routes:"+"\n")
         print(f"{len(self.solution.map.vehicles)}")
+        lines.append(f"{len(self.solution.map.vehicles)}"+"\n")
         print("Route Summary:")
+        lines.append("Route Summary:"+"\n")
         for vehicle in self.solution.map.vehicles:
-            node_id = map(lambda x: str(x.id), vehicle.vehicle_route.node_sequence)
+            node_id = [str(x.id) for x in vehicle.vehicle_route.node_sequence]
             print(','.join(node_id))
+            r = ','.join(node_id)
+            lines.append(r+"\n")
+        print(lines)
+        with open('solution.txt', 'w') as f:
+            f.writelines(lines)
+
 
     def print_vehicle_time(self):
         for vehicle in self.solution.map.vehicles:

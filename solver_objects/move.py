@@ -41,10 +41,3 @@ class DistanceType(Enum):
     NORMAL = auto()
     PENALIZED = auto()
 
-
-@dataclass
-class TSPMove:
-    first_pos: int
-    second_pos: int
-    vehicle: Vehicle
-    cost: float

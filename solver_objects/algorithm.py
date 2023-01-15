@@ -1,3 +1,4 @@
+import random
 from typing import Protocol, Tuple, List
 
 from map_objects.mapmanager import MapManager
@@ -238,6 +239,39 @@ class MinimumInsertions:
         slowest_vehicle = max(vehicle_times_copy, key=lambda x: vehicle_times_copy.get(x))
         return vehicle_times_copy.get(slowest_vehicle)
 
+
+class MinimumInsertionsRCL(MinimumInsertions):
+    def __init__(self, _map: MapManager, solution: Solution, k=3):
+        super().__init__(_map, solution)
+        self.RCL = k
+        random.seed(2)
+
+    def find_next_best_move(self) -> MinimumInsertionMove:
+
+        best_moves = []
+        for node in self.map.nodes:
+            if node.do_not_consider or node.has_been_visited:
+                continue
+
+            for vehicle in self.map.vehicles:
+                if not vehicle.has_enough_capacity(node.demand):
+                    continue
+
+                for j in range(len(vehicle.vehicle_route.node_sequence)):
+                    _, target_node, c = vehicle.vehicle_route.get_adjacent_nodes(j)
+                    distance_added, distance_removed = self.determine_distance_costs(target_node, c, node, vehicle)
+                    distance_cost = distance_added - distance_removed
+                    time_cost = self.determine_time_cost(target_node, c, node, vehicle)
+
+                    move = MinimumInsertionMove(
+                        target_pos=j, vehicle=vehicle, distance_cost=distance_cost, time_cost=time_cost,
+                        node_to_add=node
+                    )
+
+                    best_moves.append(move)
+        best_moves.sort(key= lambda move: move.move_cost)
+        k = random.randint(0,self.RCL)
+        return best_moves[k]
 
 class NearestNeighborRCL:
     pass

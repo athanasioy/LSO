@@ -1,12 +1,13 @@
 import random
 import configparser
+import time
 from typing import List
 
 from map_objects.printer import Printer
-from solver_objects.algorithm import BaseAlgo2, BetterAlgo, MinimumInsertions
+from solver_objects.algorithm import  MinimumInsertions
 from map_objects.mapmanager import MapManager
 from map_objects.node import Node, Vehicle
-from solver_objects.optimizer import SwapMoveOptimizer, ReLocatorOptimizer, TwoOptOptimizer, RemoveCrissCross
+from solver_objects.optimizer import SwapMoveOptimizer, ReLocatorOptimizer, TwoOptOptimizer
 import solver_objects.combiners
 from solver_objects.solution import Solution
 
@@ -58,42 +59,34 @@ def main(random_seed: int) -> None:
     solution = Solution(node_map)
 
     greedy_algo = MinimumInsertions(_map=node_map, solution=solution)
-    # greedy_algo = BaseAlgo2(_map=node_map)
-    # greedy_algo = BetterAlgo(_map = node_map)
+    start_time = time.time()
     greedy_algo.run()
 
     solution.run_checks()
     solution.compute_service_time()
     #
     printer = Printer(solution)
-    printer.print_solution()
     #
     sw = SwapMoveOptimizer(solution)
     rl = ReLocatorOptimizer(solution)
     twoOpt = TwoOptOptimizer(solution)
-    cc = RemoveCrissCross(solution)
-    ui2 = UI(home_depot=home_depot, customer_nodes=nodes, vehicles=node_map.vehicles)
-    #
-    vnd = solver_objects.combiners.VND()
-    vnd.add_pipeline(sw)  # sw -> rl -> TwoOpt 259
-    vnd.add_pipeline(rl)  # rl -> sw -> twoOpt 241 sw -> rl -> twoOpt 237
-    vnd.add_pipeline(twoOpt)
-    # TSTwoOpt = solver_objects.combiners.TwoOptTabuSearchWithMemory(solution, memory_limit=15, limit=500)
-    # TSTwoOpt.run()
-    vnd.run()
-    # cc.run()
-    #
-    GLS = solver_objects.combiners.VNDGLS(random_seed=1, limit=2000, solution=solution)
+
+    GLS = solver_objects.combiners.VNDGLS(random_seed=2, limit=10, solution=solution)
     GLS.add_pipeline(sw)
     GLS.add_pipeline(rl)
     GLS.add_pipeline(twoOpt)
-    # GLS.run()
+    GLS.run()
+
     solution.compute_service_time()
     solution.run_checks()
+
     printer.print_solution()
-    printer.print_vehicle_time()
+
+
+
     print(f"Solution time {solution.solution_time}")
-    ui2.plot_routes()
+    end_time = time.time()
+    print(f"Algorithm took {end_time - start_time} seconds to run")
 
 
 if __name__ == "__main__":
